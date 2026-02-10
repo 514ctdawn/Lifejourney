@@ -4,6 +4,7 @@ import { DreamCard, Scenario, ScenarioOption } from "../../engine/types";
 import { UIManager } from "../uiManager";
 import { HudBars } from "./HudBars";
 import { LifeWheel } from "./LifeWheel";
+import { MapWithMarkers } from "./MapWithMarkers";
 import { ScenarioCard } from "./ScenarioCard";
 import { ReflectionReport } from "./ReflectionReport";
 
@@ -28,6 +29,8 @@ export function GameScreen() {
   const [lastRoll, setLastRoll] = useState<number | null>(null);
   const [report, setReport] = useState<ReflectionReportData | null>(null);
   const [, setTick] = useState(0);
+  const [mapError, setMapError] = useState(false);
+  const mapSrc = "/life-map.png";
 
   const ensureEngine = () => {
     if (!engineRef.current) {
@@ -90,57 +93,87 @@ export function GameScreen() {
 
   return (
     <div className={`app-shell mood-${mood}`}>
-      <header className="app-header">
-        <div>
-          <h1>Life Journey: Digital Life</h1>
-          <p className="muted">Nintendo Switch-inspired life simulation framework</p>
-        </div>
-        <div className="dream-card">
-          <label>Dream Card</label>
-          <select
-            value={dreamCard.id}
-            onChange={(event) => {
-              const card = DREAM_CARDS.find((c) => c.id === event.target.value) ?? DREAM_CARDS[0];
-              setDreamCard(card);
-              startNewRun(card);
-            }}
-          >
-            {DREAM_CARDS.map((card) => (
-              <option key={card.id} value={card.id}>
-                {card.label}
-              </option>
-            ))}
-          </select>
-          <button className="btn btn-secondary" onClick={() => startNewRun(dreamCard)}>
-            Restart
-          </button>
-        </div>
-      </header>
+      <div className="app-left">
+        <header className="app-header">
+          <div>
+            <h1>Life Journey: Digital Life</h1>
+            <p className="muted">Nintendo Switch-inspired life simulation</p>
+          </div>
+          <div className="dream-card">
+            <label>Dream Card</label>
+            <select
+              value={dreamCard.id}
+              onChange={(event) => {
+                const card = DREAM_CARDS.find((c) => c.id === event.target.value) ?? DREAM_CARDS[0];
+                setDreamCard(card);
+                startNewRun(card);
+              }}
+            >
+              {DREAM_CARDS.map((card) => (
+                <option key={card.id} value={card.id}>
+                  {card.label}
+                </option>
+              ))}
+            </select>
+            <button className="btn btn-secondary" onClick={() => startNewRun(dreamCard)}>
+              Restart
+            </button>
+          </div>
+        </header>
 
-      <section className="hud-section">
-        <HudBars bars={uiManager.getHudBars(snapshot)} />
-        <div className="status-panel">
-          <div>Stage: {snapshot.stage}</div>
-          <div>Turns: {snapshot.turnsRemaining}</div>
-          <div>Consistency: {snapshot.hidden.consistencyScore}</div>
-          <div>Scandal: {snapshot.hidden.scandalValue}</div>
-        </div>
-      </section>
+        <div className="app-left-scroll">
+          <section className="hud-section">
+            <HudBars bars={uiManager.getHudBars(snapshot)} />
+            <div className="status-panel">
+              <div>Stage: {snapshot.stage}</div>
+              <div>Turns: {snapshot.turnsRemaining}</div>
+              <div>Consistency: {snapshot.hidden.consistencyScore}</div>
+              <div>Scandal: {snapshot.hidden.scandalValue}</div>
+            </div>
+          </section>
 
-      <section className="main-grid">
-        <LifeWheel
-          segments={uiManager.buildLifeWheel()}
-          onSpin={onSpin}
-          lastRoll={lastRoll}
-        />
-        {report ? (
-          <ReflectionReport report={report} />
-        ) : scenario ? (
-          <ScenarioCard scenario={scenario} onPick={handleOptionPick} isOptionLocked={isOptionLocked} />
+          <section className="main-grid">
+            <LifeWheel
+              segments={uiManager.buildLifeWheel()}
+              onSpin={onSpin}
+              lastRoll={lastRoll}
+            />
+            {report ? (
+              <ReflectionReport report={report} />
+            ) : (
+              <div className="card placeholder-card">Spin the Life Wheel to draw a scenario.</div>
+            )}
+          </section>
+        </div>
+      </div>
+
+      {scenario && (
+        <div className="scenario-popup-overlay" role="dialog" aria-modal="true" aria-labelledby="scenario-popup-title">
+          <div className="scenario-popup-card">
+            <ScenarioCard
+              scenario={scenario}
+              onPick={handleOptionPick}
+              isOptionLocked={isOptionLocked}
+              titleId="scenario-popup-title"
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="app-right map-panel">
+        {mapError ? (
+          <div className="map-placeholder">
+            <p>Place your board map image at <code>public/life-map.png</code></p>
+            <p className="muted">Then refresh the page.</p>
+          </div>
         ) : (
-          <div className="card placeholder-card">Spin the Life Wheel to draw a scenario.</div>
+          <MapWithMarkers
+            src={mapSrc}
+            alt="Life journey board map"
+            onError={() => setMapError(true)}
+          />
         )}
-      </section>
+      </div>
     </div>
   );
 }

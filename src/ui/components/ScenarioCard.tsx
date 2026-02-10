@@ -5,14 +5,16 @@ export function ScenarioCard({
   scenario,
   onPick,
   isOptionLocked,
+  titleId,
 }: {
   scenario: Scenario;
   onPick: (optionId: ScenarioOption["id"]) => void;
   isOptionLocked: (option: ScenarioOption) => boolean;
+  titleId?: string;
 }) {
   return (
     <div className="card scenario-card">
-      <h2>{scenario.title}</h2>
+      <h2 id={titleId}>{scenario.title}</h2>
       <p className="muted">{scenario.description}</p>
       <div className="option-grid">
         {scenario.options.map((option) => {
