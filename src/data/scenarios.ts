@@ -193,11 +193,11 @@ export const SCENARIOS: Scenario[] = [
       title: "升學大路口格",
       description: "畢業後的道路選擇。",
       options: [
-        { id: "A", label: "申請頂尖大學 (Study)", effect: { attributes: { I: P.plus2 }, riasec: { I: P.plus } } },
-        { id: "B", label: "專業培訓學院 (Work)", effect: { attributes: { R: P.plus }, riasec: { R: P.plus } } },
+        { id: "A", label: "申請頂尖大學（升學）", effect: { attributes: { I: P.plus2 }, riasec: { I: P.plus } } },
+        { id: "B", label: "專業培訓學院（就業）", effect: { attributes: { R: P.plus }, riasec: { R: P.plus } } },
         {
           id: "C",
-          label: "休學壯遊 (Travel)",
+          label: "休學壯遊（旅行）",
           effect: { attributes: { L: P.plus }, riasec: { S: P.plus }, notes: "Travel" },
         },
         { id: "D", label: "啟動早期創業 (Start-up)", effect: { lifeStatus: { money: -P.plus }, riasec: { E: P.plus2 } } },
@@ -296,7 +296,7 @@ export const SCENARIOS: Scenario[] = [
         { id: "A", label: "重啟實驗", effect: { lifeStatus: { integrity: P.plus2 }, triggers: { legend: true } } },
         {
           id: "B",
-          label: "p-hacking 修正",
+          label: "p值操弄修正",
           effect: { lifeStatus: { money: P.plus3 }, scandalDelta: 30, triggers: { scandal: true } },
         },
         { id: "C", label: "註明誤差發表", effect: { attributes: { I: P.plus2 }, lifeStatus: { integrity: P.plus } } },

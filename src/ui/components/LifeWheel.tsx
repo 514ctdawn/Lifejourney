@@ -64,10 +64,10 @@ export function LifeWheel({
         onClick={handleSpin}
         disabled={isSpinning}
       >
-        {isSpinning ? "Spinning…" : "Spin Life Wheel"}
+        {isSpinning ? "轉動中…" : "轉動人生輪盤"}
       </button>
       <div className="wheel-result">
-        {lastRoll ? `Rolled: ${lastRoll}` : "Ready to spin"}
+        {lastRoll ? `擲出：${lastRoll}` : "準備轉動"}
       </div>
     </div>
   );

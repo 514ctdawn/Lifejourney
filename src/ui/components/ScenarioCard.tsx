@@ -28,7 +28,7 @@ export function ScenarioCard({
             >
               <span className="option-id">{option.id}</span>
               <span>{option.label}</span>
-              {locked && <span className="option-lock">Locked</span>}
+              {locked && <span className="option-lock">未解鎖</span>}
             </button>
           );
         })}

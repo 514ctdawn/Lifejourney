@@ -93,14 +93,14 @@ export function MapWithMarkers({ src, alt, onError }: { src: string; alt: string
         <div
           className="map-flag-wrap map-flag-start"
           style={{ left: `${START.x}%`, top: `${START.y}%` }}
-          title="Start"
+          title="起點"
         >
           <FlagIcon type="start" />
         </div>
         <div
           className="map-flag-wrap map-flag-end"
           style={{ left: `${END.x}%`, top: `${END.y}%` }}
-          title="Goal"
+          title="終點"
         >
           <FlagIcon type="end" />
         </div>
@@ -113,8 +113,8 @@ export function MapWithMarkers({ src, alt, onError }: { src: string; alt: string
           onPointerLeave={handlePointerUp}
           role="button"
           tabIndex={0}
-          title="Drag along path"
-          aria-label="Move marker along path"
+          title="沿路徑拖動"
+          aria-label="沿路徑移動標記"
         />
       </div>
     </div>

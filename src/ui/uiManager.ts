@@ -15,14 +15,14 @@ export class UIManager {
 
   getHudBars(snapshot: PlayerSnapshot) {
     return [
-      { id: "I", label: "Intelligence", value: snapshot.attributes.I },
-      { id: "R", label: "Physical", value: snapshot.attributes.R },
-      { id: "A", label: "Inspiration", value: snapshot.attributes.A },
-      { id: "L", label: "Luck", value: snapshot.attributes.L },
-      { id: "money", label: "Money", value: snapshot.lifeStatus.money },
-      { id: "stress", label: "Stress", value: snapshot.lifeStatus.stress },
-      { id: "happiness", label: "Happiness", value: snapshot.lifeStatus.happiness },
-      { id: "integrity", label: "Integrity", value: snapshot.lifeStatus.integrity },
+      { id: "I", label: "智力", value: snapshot.attributes.I },
+      { id: "R", label: "體能", value: snapshot.attributes.R },
+      { id: "A", label: "靈感", value: snapshot.attributes.A },
+      { id: "L", label: "運氣", value: snapshot.attributes.L },
+      { id: "money", label: "金錢", value: snapshot.lifeStatus.money },
+      { id: "stress", label: "壓力", value: snapshot.lifeStatus.stress },
+      { id: "happiness", label: "快樂", value: snapshot.lifeStatus.happiness },
+      { id: "integrity", label: "誠信", value: snapshot.lifeStatus.integrity },
     ];
   }
 

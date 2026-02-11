@@ -7,6 +7,7 @@ import { LifeWheel } from "./LifeWheel";
 import { MapWithMarkers } from "./MapWithMarkers";
 import { ScenarioCard } from "./ScenarioCard";
 import { ReflectionReport } from "./ReflectionReport";
+import mapImg from "/Map_hk.jpeg";
 
 const DREAM_CARDS: DreamCard[] = [
   { id: "surgeon", label: "頂級外科醫生", primaryRiasec: "I", secondaryRiasec: "S" },
@@ -30,7 +31,7 @@ export function GameScreen() {
   const [report, setReport] = useState<ReflectionReportData | null>(null);
   const [, setTick] = useState(0);
   const [mapError, setMapError] = useState(false);
-  const mapSrc = "/life-map.png";
+  const mapSrc = mapImg; // resolved with correct base path by Vite
 
   const ensureEngine = () => {
     if (!engineRef.current) {
@@ -96,11 +97,11 @@ export function GameScreen() {
       <div className="app-left">
         <header className="app-header">
           <div>
-            <h1>Life Journey: Digital Life</h1>
-            <p className="muted">Nintendo Switch-inspired life simulation</p>
+            <h1>人生旅程：數位人生</h1>
+            <p className="muted">靈感來自任天堂 Switch 的人生模擬</p>
           </div>
           <div className="dream-card">
-            <label>Dream Card</label>
+            <label>夢想卡</label>
             <select
               value={dreamCard.id}
               onChange={(event) => {
@@ -116,7 +117,7 @@ export function GameScreen() {
               ))}
             </select>
             <button className="btn btn-secondary" onClick={() => startNewRun(dreamCard)}>
-              Restart
+              重新開始
             </button>
           </div>
         </header>
@@ -125,10 +126,10 @@ export function GameScreen() {
           <section className="hud-section">
             <HudBars bars={uiManager.getHudBars(snapshot)} />
             <div className="status-panel">
-              <div>Stage: {snapshot.stage}</div>
-              <div>Turns: {snapshot.turnsRemaining}</div>
-              <div>Consistency: {snapshot.hidden.consistencyScore}</div>
-              <div>Scandal: {snapshot.hidden.scandalValue}</div>
+              <div>階段：{snapshot.stage}</div>
+              <div>剩餘回合：{snapshot.turnsRemaining}</div>
+              <div>一致性：{snapshot.hidden.consistencyScore}</div>
+              <div>醜聞值：{snapshot.hidden.scandalValue}</div>
             </div>
           </section>
 
@@ -141,7 +142,7 @@ export function GameScreen() {
             {report ? (
               <ReflectionReport report={report} />
             ) : (
-              <div className="card placeholder-card">Spin the Life Wheel to draw a scenario.</div>
+              <div className="card placeholder-card">轉動人生輪盤以抽取情境。</div>
             )}
           </section>
         </div>
@@ -163,13 +164,13 @@ export function GameScreen() {
       <div className="app-right map-panel">
         {mapError ? (
           <div className="map-placeholder">
-            <p>Place your board map image at <code>public/life-map.png</code></p>
-            <p className="muted">Then refresh the page.</p>
+            <p>請將地圖圖片放在 <code>public/Map_hk.jpeg</code></p>
+            <p className="muted">然後重新整理頁面。</p>
           </div>
         ) : (
           <MapWithMarkers
             src={mapSrc}
-            alt="Life journey board map"
+            alt="人生旅程地圖"
             onError={() => setMapError(true)}
           />
         )}

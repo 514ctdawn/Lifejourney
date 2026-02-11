@@ -253,7 +253,7 @@ File: `src/ui/components/ScenarioCard.tsx` & `GameScreen.tsx`
 File: `src/ui/components/MapWithMarkers.tsx` & `styles.css`
 
 - **Map Rendering**:
-  - Board image taken from `public/life-map.png`.
+  - Board image taken from `public/Map_hk.jpeg`.
   - Wrapped in `map-image-wrapper` with an overlay layer (`map-overlay`).
 
 - **Start & Goal Flags**:
