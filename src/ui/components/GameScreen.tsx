@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
 import { GameEngine } from "../../engine/gameEngine";
-import { DreamCard, Scenario, ScenarioOption } from "../../engine/types";
+import { DreamCard, IntroProfile, Scenario, ScenarioOption } from "../../engine/types";
 import { UIManager } from "../uiManager";
 import { HudBars } from "./HudBars";
 import { LifeWheel } from "./LifeWheel";
@@ -22,7 +22,7 @@ type ReflectionReportData = {
   stageSummaries: Record<string, number>;
 };
 
-export function GameScreen() {
+export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
   const uiManager = useMemo(() => new UIManager(), []);
   const [dreamCard, setDreamCard] = useState<DreamCard>(DREAM_CARDS[0]);
   const engineRef = useRef<GameEngine | null>(null);
@@ -98,7 +98,12 @@ export function GameScreen() {
         <header className="app-header">
           <div>
             <h1>人生旅程：數位人生</h1>
-            <p className="muted">靈感來自任天堂 Switch 的人生模擬</p>
+            {profile?.name && (
+              <p className="muted">歡迎，{profile.name}{profile.suggestedCareer ? ` · 建議方向：${profile.suggestedCareer}` : ""}</p>
+            )}
+            {!profile?.name && (
+              <p className="muted">靈感來自任天堂 Switch 的人生模擬</p>
+            )}
           </div>
           <div className="dream-card">
             <label>夢想卡</label>

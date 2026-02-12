@@ -87,3 +87,23 @@ export interface Ending {
   title: string;
   description: string;
 }
+
+/** Intro quiz: Ambition, Creativity, Stability */
+export type IntroStatKey = "Ambition" | "Creativity" | "Stability";
+
+export interface IntroStats {
+  Ambition: number;
+  Creativity: number;
+  Stability: number;
+}
+
+export type CoreGoalId = "money" | "fame" | "peace";
+
+export interface IntroProfile {
+  name: string;
+  age: string;
+  gender: string;
+  coreGoal: CoreGoalId;
+  stats: IntroStats;
+  suggestedCareer: string;
+}
