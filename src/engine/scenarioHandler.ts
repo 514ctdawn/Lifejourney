@@ -15,11 +15,14 @@ export class ScenarioDataHandler {
     return this.scenarios.find((scenario) => scenario.id === id);
   }
 
-  pickNextScenario(stage: StageId, seen: Set<string>): Scenario | undefined {
-    const pool = this.getByStage(stage).filter((scenario) => !seen.has(scenario.id));
-    if (pool.length === 0) {
-      return undefined;
-    }
+  /**
+   * Always returns some scenario as long as there is at least one in the data.
+   * Prefer the current stage; if none exist, fall back to any scenario.
+   */
+  pickNextScenario(stage: StageId): Scenario | undefined {
+    const inStage = this.getByStage(stage);
+    const pool = inStage.length > 0 ? inStage : this.scenarios;
+    if (pool.length === 0) return undefined;
     const index = Math.floor(Math.random() * pool.length);
     return pool[index];
   }

@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 type Point = { x: number; y: number };
 
@@ -11,6 +11,9 @@ const PATH: Point[] = [
   { x: 78, y: 30 },
   { x: 82, y: 31 }, // last index → RED FLAG
 ];
+
+// Export length so game logic can move along the path by index
+export const PATH_LENGTH = PATH.length;
 
 function nearestPointOnPath(path: Point[], p: Point): Point {
   let best: Point = path[0];
@@ -50,10 +53,30 @@ function FlagIcon({ type }: { type: "start" | "end" }) {
   );
 }
 
-export function MapWithMarkers({ src, alt, onError }: { src: string; alt: string; onError?: () => void }) {
+export function MapWithMarkers({
+  src,
+  alt,
+  onError,
+  progressIndex,
+}: {
+  src: string;
+  alt: string;
+  onError?: () => void;
+  /** Optional: discrete progress along PATH (0 … PATH_LENGTH-1) */
+  progressIndex?: number;
+}) {
   const [dotPosition, setDotPosition] = useState<Point>(START);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // When game advances along the path (e.g. after answering a question),
+  // snap the green dot to that PATH index.
+  useEffect(() => {
+    if (typeof progressIndex !== "number") return;
+    const idx = Math.max(0, Math.min(PATH.length - 1, progressIndex));
+    const target = PATH[idx];
+    setDotPosition(target);
+  }, [progressIndex]);
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {

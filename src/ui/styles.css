@@ -34,7 +34,7 @@ html, body {
 
 .app-left {
   flex: 0 0 auto;
-  width: 340px;
+  width: 420px; /* make left panel wider so header + dream card are not cramped */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -339,6 +339,40 @@ html, body {
   border-radius: 999px;
 }
 
+/* Career suggestion cards inside reflection report */
+.career-suggestions {
+  margin-top: 16px;
+}
+
+.career-suggestions h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.career-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.career-card {
+  background: #f9f5ff;
+  border-radius: 14px;
+  padding: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  font-size: 13px;
+}
+
+.career-card-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.career-card-desc {
+  margin: 0;
+  line-height: 1.4;
+}
+
 .btn {
   border: none;
   border-radius: 14px;
@@ -497,6 +531,59 @@ html, body {
 
 .scenario-popup-card .scenario-card {
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.25);
+}
+
+/* Reflection report popup (end-of-run) */
+.report-popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.2), rgba(15, 23, 42, 0.8));
+  animation: popup-fade-in 0.25s ease-out;
+}
+
+.report-popup-card {
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 28px;
+  background: linear-gradient(145deg, #fff7f7, #f0f4ff);
+  box-shadow: 0 28px 64px rgba(15, 23, 42, 0.45);
+  padding: 4px;
+}
+
+.report-popup-card .reflection-card {
+  background: transparent;
+  box-shadow: none;
+}
+
+.reflection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.icon-button.reflection-close {
+  border: none;
+  background: rgba(15, 23, 42, 0.06);
+  border-radius: 999px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.icon-button.reflection-close:hover {
+  background: rgba(15, 23, 42, 0.12);
 }
 
 /* Intro module (pre-game quiz) */

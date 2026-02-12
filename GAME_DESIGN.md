@@ -4,12 +4,20 @@
 
 - **Genre**: Nintendo Switch–style life simulation / board-life game.
 - **Core Fantasy**: Spin through a full digital life from early childhood to legacy, making trade-off decisions under visible stats (HUD blood bars) and hidden psychological metrics, then receive an AI-driven Life Reflection Report.
-- **Main Loop**:
-  1. **Choose Dream Card** (onboarding baseline).
-  2. **Spin Life Wheel** to advance time and trigger scenarios.
-  3. **Answer a 4-option scenario** (popup question card).
-  4. **Watch immediate stat changes + Haggard/Scandal visuals**.
-  5. **Repeat across stages** until turns run out, then get **Ending + Report**.
+- **Player Flow (High-Level)**:
+  1. **Pre-game Intro Quiz** – short psychological profiling that captures:
+     - Basic info: name, age, gender.
+     - Core life goal: 金錢 (money) / 名譽 (fame) / 平靜 (peace).
+     - 4 forced-choice questions mapped to three meta-traits:
+       - **Ambition** – 成就抱負
+       - **Creativity** – 創新思維
+       - **Stability** – 穩定安全
+     - Outputs an `IntroProfile` and suggested starting career direction.
+  2. **Choose Dream Card** (on the main game screen) to set RIASEC baseline.
+  3. **Spin Life Wheel** to advance time and trigger scenarios.
+  4. **Answer a 4-option scenario** (popup question card).
+  5. **Watch immediate stat changes + Haggard/Scandal visuals**.
+  6. **Repeat across stages** until turns run out, then get **Ending + Life Reflection Report**.
 
 ---
 
@@ -83,10 +91,48 @@ File: `src/engine/gameEngine.ts`
     - **Legendary Research Founder**: `I > 90` plus “Legend” triggers.
     - Deeply uses integrity, scandal, RIASEC, and stress patterns.
   - `generateLifeReflectionReport()` – packs:
-    - Final Ending (id, title, description).
-    - EndingScore.
-    - Final RIASEC vector.
-    - Per-stage scenario counts for reflection.
+      - Final Ending (id, title, description).
+      - EndingScore.
+      - Final RIASEC vector.
+      - Per-stage scenario counts for reflection.
+
+#### 2.5 Intro Profiling (Ambition / Creativity / Stability)
+
+File: `src/ui/components/IntroModule.tsx` and `src/engine/types.ts`
+
+- **Data structures**:
+  - `IntroStats`:
+    - `Ambition`, `Creativity`, `Stability` – integer counters starting at 0.
+  - `CoreGoalId`:
+    - `"money" | "fame" | "peace"` – core life orientation.
+  - `IntroProfile`:
+    - `name`, `age`, `gender`.
+    - `coreGoal: CoreGoalId`.
+    - `stats: IntroStats`.
+    - `suggestedCareer: string` – derived from the dominant meta-trait.
+
+- **Question mapping** (4 questions, each A/B/C choice):
+  - **Ambition**:
+    - 在壓力下「沒日沒夜加班，只求達標」。
+    - 選擇高樓層權力感強的辦公室。
+    - 把啟動資金全部押在高風險高報酬投資。
+    - 希望被評價為「白手起家、建立龐大商業帝國」。
+  - **Creativity**:
+    - 嘗試沒人試過的偏門方法。
+    - 在藝術感強、自由度高的辦公空間工作。
+    - 把啟動資金投入研發器材或新藝術技能。
+    - 希望被評價為「改變世界看法的前衛創作者」。
+  - **Stability**:
+    - 按程序向上司回報、申請延期或標準支援。
+    - 在離家近、穩定溫馨的團隊工作。
+    - 將資金存入銀行或低風險保險以保安全。
+    - 希望被評價為「家人可靠的支柱、生活穩健」。
+
+- **Career suggestion**:
+  - `max(Ambition, Creativity, Stability)` 決定建議職涯起點：
+    - Ambition 高 → 建議如「實習律師」等成就導向角色。
+    - Creativity 高 → 建議如「初級設計師」等創意導向角色。
+    - Stability 高 → 建議如「穩健職員／行政人員」等穩定導向角色。
 
 ---
 
@@ -273,10 +319,15 @@ File: `src/ui/components/MapWithMarkers.tsx` & `styles.css`
 
 ### 6. Game Flow Summary (Player Experience)
 
-1. **Onboarding**:
-   - Launch game.
-   - Choose **Dream Card** (e.g. Surgeon / Artist / Founder).
-   - HUD and RIASEC baseline are initialized from defaults.
+1. **Onboarding / Intro Quiz**:
+   - Launch game → 進入 **遊戲開場心理測驗** (`IntroModule`):
+     - 填寫：姓名、年齡、性別。
+     - 選擇核心目標：金錢 / 名譽 / 平靜。
+     - 依序回答 4 題情境題，系統在背景中累加 `Ambition / Creativity / Stability`。
+   - 結算畫面：
+     - 顯示三項分數。
+     - 給出一個建議職業方向（例如：實習律師 / 初級設計師 / 穩健職員）。
+   - 玩家按下「開始遊戲」，帶著 `IntroProfile` 進入主遊戲畫面。
 
 2. **Main Loop**:
    - Observe **HUD Blood Bars**, **Stage**, **Turns**, **Consistency**, **Scandal**.

@@ -1,18 +1,72 @@
 import React, { useMemo, useRef, useState } from "react";
 import { GameEngine } from "../../engine/gameEngine";
-import { DreamCard, IntroProfile, Scenario, ScenarioOption } from "../../engine/types";
+import {
+  DreamCard,
+  IntroProfile,
+  IntroStatKey,
+  IntroStats,
+  Scenario,
+  ScenarioOption,
+} from "../../engine/types";
 import { UIManager } from "../uiManager";
 import { HudBars } from "./HudBars";
 import { LifeWheel } from "./LifeWheel";
-import { MapWithMarkers } from "./MapWithMarkers";
+import { MapWithMarkers, PATH_LENGTH } from "./MapWithMarkers";
 import { ScenarioCard } from "./ScenarioCard";
 import { ReflectionReport } from "./ReflectionReport";
 import mapImg from "/Map_hk.jpeg";
 
-const DREAM_CARDS: DreamCard[] = [
-  { id: "surgeon", label: "頂級外科醫生", primaryRiasec: "I", secondaryRiasec: "S" },
-  { id: "artist", label: "新銳藝術家", primaryRiasec: "A", secondaryRiasec: "S" },
-  { id: "founder", label: "科技創業家", primaryRiasec: "E", secondaryRiasec: "I" },
+type DreamCardWithIcon = DreamCard & { icon: string; subtitle: string };
+
+const DREAM_CARDS: DreamCardWithIcon[] = [
+  {
+    id: "surgeon",
+    label: "頂級外科醫生",
+    primaryRiasec: "I",
+    secondaryRiasec: "S",
+    icon: "🩺",
+    subtitle: "高壓高責任的專業路徑",
+  },
+  {
+    id: "artist",
+    label: "新銳藝術家",
+    primaryRiasec: "A",
+    secondaryRiasec: "S",
+    icon: "🎨",
+    subtitle: "以創作與表達為核心",
+  },
+  {
+    id: "founder",
+    label: "科技創業家",
+    primaryRiasec: "E",
+    secondaryRiasec: "I",
+    icon: "🚀",
+    subtitle: "把點子變成公司的人",
+  },
+  {
+    id: "designer",
+    label: "體驗設計師",
+    primaryRiasec: "A",
+    secondaryRiasec: "I",
+    icon: "🕹️",
+    subtitle: "介於藝術與系統思維之間",
+  },
+  {
+    id: "planner",
+    label: "城市規劃師",
+    primaryRiasec: "I",
+    secondaryRiasec: "C",
+    icon: "🏙️",
+    subtitle: "用地圖與數據設計城市未來",
+  },
+  {
+    id: "mentor",
+    label: "生涯導師",
+    primaryRiasec: "S",
+    secondaryRiasec: "E",
+    icon: "🧭",
+    subtitle: "陪伴他人做出長期選擇",
+  },
 ];
 
 type ReflectionReportData = {
@@ -20,7 +74,47 @@ type ReflectionReportData = {
   endingScore: number;
   riasecProfile: Record<string, number>;
   stageSummaries: Record<string, number>;
+  suggestedJobs: { title: string; description: string }[];
 };
+
+// Shorter run length so players can more easily reach the final report.
+const TOTAL_TURNS = 20;
+
+function getDominantTrait(stats: IntroStats | undefined | null): IntroStatKey | null {
+  if (!stats) return null;
+  const entries = Object.entries(stats) as [IntroStatKey, number][];
+  if (!entries.length) return null;
+  const { key } = entries.reduce(
+    (best, [k, v]) => (v > best.value ? { key: k, value: v } : best),
+    { key: "Stability" as IntroStatKey, value: -1 }
+  );
+  return key;
+}
+
+function getRecommendedDreamIdForTrait(trait: IntroStatKey | null): DreamCard["id"] | null {
+  switch (trait) {
+    case "Ambition":
+      // 企圖心與地位導向 → 創業家
+      return "founder";
+    case "Creativity":
+      // 創作與表達導向 → 藝術家
+      return "artist";
+    case "Stability":
+      // 穩定與責任導向 → 醫生路徑
+      return "surgeon";
+    default:
+      return null;
+  }
+}
+
+function getDestinyBonus(profile: IntroProfile | null | undefined, card: DreamCard): number {
+  const trait = getDominantTrait(profile?.stats);
+  const recommendedId = getRecommendedDreamIdForTrait(trait);
+  if (recommendedId && recommendedId === card.id) {
+    return 10;
+  }
+  return 0;
+}
 
 export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
   const uiManager = useMemo(() => new UIManager(), []);
@@ -29,19 +123,26 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [lastRoll, setLastRoll] = useState<number | null>(null);
   const [report, setReport] = useState<ReflectionReportData | null>(null);
+  const [showReport, setShowReport] = useState(false);
   const [, setTick] = useState(0);
   const [mapError, setMapError] = useState(false);
   const mapSrc = mapImg; // resolved with correct base path by Vite
+  const dominantTrait = getDominantTrait(profile?.stats);
+  const recommendedDreamId = getRecommendedDreamIdForTrait(dominantTrait);
+   // Position along the board PATH (0 … PATH_LENGTH-1)
+  const [pathIndex, setPathIndex] = useState(0);
 
   const ensureEngine = () => {
     if (!engineRef.current) {
-      engineRef.current = new GameEngine(dreamCard);
+      const bonus = getDestinyBonus(profile ?? null, dreamCard);
+      engineRef.current = new GameEngine(dreamCard, TOTAL_TURNS, undefined, bonus);
     }
     return engineRef.current;
   };
 
   const startNewRun = (card: DreamCard) => {
-    engineRef.current = new GameEngine(card);
+    const bonus = getDestinyBonus(profile ?? null, card);
+    engineRef.current = new GameEngine(card, TOTAL_TURNS, undefined, bonus);
     setScenario(engineRef.current.nextScenario() ?? null);
     setReport(null);
     setLastRoll(null);
@@ -55,8 +156,24 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
   const onSpin = () => {
     const roll = engine.spinLifeWheel();
     setLastRoll(roll);
-    if (!scenario) {
-      setScenario(engine.nextScenario() ?? null);
+    // Every spin should advance to the next life scenario.
+    const next = engine.nextScenario();
+    if (next) {
+      setScenario(next);
+    } else {
+      // Absolute fallback: never get stuck without a question.
+      setScenario({
+        id: "fallback",
+        stage: snapshot.stage,
+        title: "臨時情境：系統找不到題目",
+        description: "為了讓流程不中斷，這是一個臨時題目。請隨意選一個選項繼續體驗。",
+        options: [
+          { id: "A", label: "穩穩前進", effect: {} },
+          { id: "B", label: "嘗試新路", effect: {} },
+          { id: "C", label: "暫停休息", effect: {} },
+          { id: "D", label: "交給命運", effect: {} },
+        ],
+      });
     }
     return roll;
   };
@@ -84,11 +201,17 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
   const handleOptionPick = (optionId: ScenarioOption["id"]) => {
     if (!scenario) return;
     engine.resolveScenario(scenario.id, optionId);
-    const next = engine.nextScenario() ?? null;
-    setScenario(next);
+    // After answering, close the question card.
+    setScenario(null);
+    // Move the green marker along the path by the last wheel result.
+    if (lastRoll) {
+      setPathIndex((prev) => Math.min(prev + lastRoll, PATH_LENGTH - 1));
+      setLastRoll(null);
+    }
     setTick((t) => t + 1);
     if (engine.snapshot.turnsRemaining === 0) {
-      setReport(engine.generateLifeReflectionReport());
+      setReport(engine.generateLifeReflectionReport(profile ?? null));
+      setShowReport(true);
     }
   };
 
@@ -115,11 +238,15 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
                 startNewRun(card);
               }}
             >
-              {DREAM_CARDS.map((card) => (
-                <option key={card.id} value={card.id}>
-                  {card.label}
-                </option>
-              ))}
+              {DREAM_CARDS.map((card) => {
+                const isRecommended = card.id === recommendedDreamId;
+                const prefix = `${card.icon} ${card.label}`;
+                return (
+                  <option key={card.id} value={card.id}>
+                    {isRecommended ? `⭐ ${prefix}` : prefix}
+                  </option>
+                );
+              })}
             </select>
             <button className="btn btn-secondary" onClick={() => startNewRun(dreamCard)}>
               重新開始
@@ -144,11 +271,19 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
               onSpin={onSpin}
               lastRoll={lastRoll}
             />
-            {report ? (
-              <ReflectionReport report={report} />
-            ) : (
-              <div className="card placeholder-card">轉動人生輪盤以抽取情境。</div>
-            )}
+            <div className="card placeholder-card">
+              {report ? (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setShowReport(true)}
+                >
+                  查看人生反思報告
+                </button>
+              ) : (
+                "轉動人生輪盤以抽取情境。"
+              )}
+            </div>
           </section>
         </div>
       </div>
@@ -166,6 +301,17 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
         </div>
       )}
 
+      {report && showReport && (
+        <div className="report-popup-overlay" role="dialog" aria-modal="true" aria-labelledby="report-popup-title">
+          <div className="report-popup-card">
+            <ReflectionReport
+              report={report}
+              onClose={() => setShowReport(false)}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="app-right map-panel">
         {mapError ? (
           <div className="map-placeholder">
@@ -176,6 +322,7 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
           <MapWithMarkers
             src={mapSrc}
             alt="人生旅程地圖"
+            progressIndex={pathIndex}
             onError={() => setMapError(true)}
           />
         )}

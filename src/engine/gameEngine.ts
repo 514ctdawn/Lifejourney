@@ -4,8 +4,13 @@ import { ScenarioDataHandler } from "./scenarioHandler";
 import {
   DreamCard,
   Ending,
+  IntroProfile,
+  IntroStatKey,
+  IntroStats,
   OptionEffect,
   PlayerSnapshot,
+  RiasecKey,
+  RiasecVector,
   Scenario,
   ScenarioOption,
   ScenarioResult,
@@ -16,14 +21,78 @@ import { SCENARIOS } from "../data/scenarios";
 const clamp = (value: number, min: number, max: number) =>
   Math.max(min, Math.min(max, value));
 
+const CAREER_SUGGESTIONS: Record<IntroStatKey, { title: string; description: string }[]> = {
+  Ambition: [
+    { title: "創業家／CEO", description: "擅長整合資源、承擔風險，帶領團隊衝刺成長。" },
+    { title: "企業策略顧問", description: "為公司設計成長路線與併購策略，習慣高壓決策。" },
+    { title: "投資銀行分析師", description: "在快速節奏下處理大型交易與財務模型。" },
+    { title: "律師", description: "結合法規與溝通技巧，在談判中為客戶爭取最大利益。" },
+    { title: "業務／業務經理", description: "以業績與人脈為導向，喜歡明確目標與挑戰。" },
+    { title: "產品經理", description: "在技術與商業之間協調，決定產品的方向與節奏。" },
+  ],
+  Creativity: [
+    { title: "UX／UI 設計師", description: "結合美感與使用者心理，設計好玩的介面與互動。" },
+    { title: "遊戲設計師", description: "設計關卡、劇情與系統，打造完整遊戲體驗。" },
+    { title: "品牌／視覺設計師", description: "用顏色與形狀說故事，建立獨特品牌形象。" },
+    { title: "建築師", description: "把抽象概念轉化為真實空間，兼具創意與結構思維。" },
+    { title: "多媒體創作者", description: "透過影像、音樂與動態設計來表達想法。" },
+    { title: "服務設計師", description: "重組整體服務流程，讓使用者旅程更直覺、順暢。" },
+  ],
+  Stability: [
+    { title: "財務規劃師", description: "幫助個人與家庭配置資產，追求長期穩健成長。" },
+    { title: "資料分析師", description: "在有結構的環境中整理數據並提供決策依據。" },
+    { title: "公務員／行政人員", description: "偏好制度明確、流程穩定的工作環境。" },
+    { title: "人資專員", description: "在規則框架下照顧組織與同事的需求。" },
+    { title: "風險管理專員", description: "預先思考最壞情況，確保組織不踩雷。" },
+    { title: "醫療管理人員", description: "協調醫護團隊與資源，維持長期、高品質運作。" },
+  ],
+};
+
+function getDominantIntroTrait(stats?: IntroStats): IntroStatKey | null {
+  if (!stats) return null;
+  const entries = Object.entries(stats) as [IntroStatKey, number][];
+  if (!entries.length) return null;
+  const { key } = entries.reduce(
+    (best, [k, v]) => (v > best.value ? { key: k, value: v } : best),
+    { key: "Stability" as IntroStatKey, value: -1 }
+  );
+  return key;
+}
+
+function getTopRiasecKey(vec: RiasecVector): RiasecKey {
+  const entries = Object.entries(vec) as [RiasecKey, number][];
+  return entries.reduce((best, [k, v]) => (v > best.value ? { key: k, value: v } : best), {
+    key: "I" as RiasecKey,
+    value: -1,
+  }).key;
+}
+
+function buildCareerSuggestions(
+  introProfile: IntroProfile | null | undefined,
+  riasec: RiasecVector
+): { title: string; description: string }[] {
+  const dominant = getDominantIntroTrait(introProfile?.stats);
+  if (!dominant) return [];
+
+  // In the未來 can further specialize by RIASEC code; 目前先依人格大類提供 5–6 個方向。
+  return CAREER_SUGGESTIONS[dominant] ?? [];
+}
+
 export class GameEngine {
   private scenarioHandler: ScenarioDataHandler;
-  private seenScenarios = new Set<string>();
   private history: ScenarioResult[] = [];
   private player: PlayerState;
 
-  constructor(dreamCard: DreamCard, totalTurns = 50, scenarios: Scenario[] = SCENARIOS) {
+  constructor(
+    dreamCard: DreamCard,
+    totalTurns = 50,
+    scenarios: Scenario[] = SCENARIOS,
+    initialConsistency = 0
+  ) {
     this.player = new PlayerState(dreamCard, totalTurns);
+    if (initialConsistency !== 0) {
+      this.player.applyConsistency(initialConsistency);
+    }
     this.scenarioHandler = new ScenarioDataHandler(scenarios);
   }
 
@@ -40,7 +109,7 @@ export class GameEngine {
   }
 
   nextScenario(): Scenario | undefined {
-    return this.scenarioHandler.pickNextScenario(this.player.stage, this.seenScenarios);
+    return this.scenarioHandler.pickNextScenario(this.player.stage);
   }
 
   resolveScenario(scenarioId: string, optionId: ScenarioOption["id"]): ScenarioResult {
@@ -68,6 +137,11 @@ export class GameEngine {
     }
 
     const effect: OptionEffect = option.effect ?? {};
+    // UX: if an option doesn't touch any visible stats at all,
+    // give a small default變化，讓玩家每次選擇都能在 HUD 上看到回饋。
+    if (!effect.attributes && !effect.lifeStatus) {
+      effect.lifeStatus = { happiness: 5 };
+    }
     if (effect.attributes) {
       this.player.applyAttributes(effect.attributes);
     }
@@ -101,7 +175,6 @@ export class GameEngine {
       },
     };
 
-    this.seenScenarios.add(scenarioId);
     this.history.push(result);
     return result;
   }
@@ -185,12 +258,13 @@ export class GameEngine {
     return { id: "ending-default", title: "人生旅途的旅人", description: "你的旅程留下獨特足跡。" };
   }
 
-  generateLifeReflectionReport() {
+  generateLifeReflectionReport(introProfile?: IntroProfile | null) {
     const ending = this.evaluateEnding();
+    const riasecProfile = this.player.snapshot.hidden.riasec;
     return {
       ending,
       endingScore: this.getEndingScore(),
-      riasecProfile: this.player.snapshot.hidden.riasec,
+      riasecProfile,
       stageSummaries: this.history.reduce<Record<StageId, number>>(
         (acc, entry) => {
           const stage = this.scenarioHandler.getScenarioById(entry.scenarioId)?.stage ?? 1;
@@ -199,6 +273,7 @@ export class GameEngine {
         },
         { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
       ),
+      suggestedJobs: buildCareerSuggestions(introProfile ?? null, riasecProfile),
     };
   }
 
