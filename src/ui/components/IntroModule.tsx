@@ -18,23 +18,23 @@ const CORE_GOALS: { id: CoreGoalId; label: string }[] = [
 ];
 
 const FATE_OPTIONS: { id: BeliefFate; label: string }[] = [
-  { id: "yes", label: "Yes" },
-  { id: "no", label: "No" },
-  { id: "not_sure", label: "Not sure" },
+  { id: "yes", label: "相信" },
+  { id: "no", label: "不相信" },
+  { id: "not_sure", label: "不確定" },
 ];
 
 const WHAT_MATTERS_OPTIONS: { id: WhatMattersMost; label: string }[] = [
-  { id: "love", label: "Love" },
-  { id: "career", label: "Career" },
-  { id: "freedom", label: "Freedom" },
-  { id: "family", label: "Family" },
+  { id: "love", label: "愛情" },
+  { id: "career", label: "事業" },
+  { id: "freedom", label: "自由" },
+  { id: "family", label: "家庭" },
 ];
 
 const SUPERPOWER_OPTIONS: { id: SuperpowerChoice; label: string }[] = [
-  { id: "mind_reading", label: "Mind reading" },
-  { id: "time_travel", label: "Time travel" },
-  { id: "invisibility", label: "Invisibility" },
-  { id: "healing", label: "Healing" },
+  { id: "mind_reading", label: "讀心術" },
+  { id: "time_travel", label: "時光旅行" },
+  { id: "invisibility", label: "隱身" },
+  { id: "healing", label: "治癒" },
 ];
 
 const QUESTIONS: {
@@ -235,8 +235,8 @@ export function IntroModule({ onComplete }: { onComplete: (profile: IntroProfile
 
         {step === 1 && (
           <div className="intro-step">
-            <h2>Belief</h2>
-            <p className="intro-q">Do you believe fate can be changed?</p>
+            <h2>信念</h2>
+            <p className="intro-q">你相信命運可以被改變嗎？</p>
             <div className="intro-options">
               {FATE_OPTIONS.map((opt) => (
                 <button
@@ -254,8 +254,8 @@ export function IntroModule({ onComplete }: { onComplete: (profile: IntroProfile
 
         {step === 2 && (
           <div className="intro-step">
-            <h2>Priorities</h2>
-            <p className="intro-q">What matters most to you?</p>
+            <h2>價值觀</h2>
+            <p className="intro-q">對你來說最重要的是什麼？</p>
             <div className="intro-options">
               {WHAT_MATTERS_OPTIONS.map((opt) => (
                 <button
@@ -273,8 +273,8 @@ export function IntroModule({ onComplete }: { onComplete: (profile: IntroProfile
 
         {step === 3 && (
           <div className="intro-step">
-            <h2>Superpower</h2>
-            <p className="intro-q">If you could have one superpower, what would it be?</p>
+            <h2>超能力</h2>
+            <p className="intro-q">如果你能擁有一種超能力，你會選擇什麼？</p>
             <div className="intro-options">
               {SUPERPOWER_OPTIONS.map((opt) => (
                 <button
