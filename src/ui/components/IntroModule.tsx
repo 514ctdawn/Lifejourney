@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import type { IntroProfile, IntroStats, CoreGoalId, IntroStatKey } from "../../engine/types";
+import type {
+  IntroProfile,
+  IntroStats,
+  CoreGoalId,
+  IntroStatKey,
+  BeliefFate,
+  WhatMattersMost,
+  SuperpowerChoice,
+} from "../../engine/types";
 
 const INITIAL_STATS: IntroStats = { Ambition: 0, Creativity: 0, Stability: 0 };
 
@@ -7,6 +15,26 @@ const CORE_GOALS: { id: CoreGoalId; label: string }[] = [
   { id: "money", label: "金錢" },
   { id: "fame", label: "名譽" },
   { id: "peace", label: "平靜" },
+];
+
+const FATE_OPTIONS: { id: BeliefFate; label: string }[] = [
+  { id: "yes", label: "Yes" },
+  { id: "no", label: "No" },
+  { id: "not_sure", label: "Not sure" },
+];
+
+const WHAT_MATTERS_OPTIONS: { id: WhatMattersMost; label: string }[] = [
+  { id: "love", label: "Love" },
+  { id: "career", label: "Career" },
+  { id: "freedom", label: "Freedom" },
+  { id: "family", label: "Family" },
+];
+
+const SUPERPOWER_OPTIONS: { id: SuperpowerChoice; label: string }[] = [
+  { id: "mind_reading", label: "Mind reading" },
+  { id: "time_travel", label: "Time travel" },
+  { id: "invisibility", label: "Invisibility" },
+  { id: "healing", label: "Healing" },
 ];
 
 const QUESTIONS: {
@@ -118,6 +146,9 @@ export function IntroModule({ onComplete }: { onComplete: (profile: IntroProfile
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
+  const [beliefFate, setBeliefFate] = useState<BeliefFate | null>(null);
+  const [whatMattersMost, setWhatMattersMost] = useState<WhatMattersMost | null>(null);
+  const [superpower, setSuperpower] = useState<SuperpowerChoice | null>(null);
   const [coreGoal, setCoreGoal] = useState<CoreGoalId | null>(null);
   const [stats, setStats] = useState<IntroStats>({ ...INITIAL_STATS });
 
@@ -126,6 +157,9 @@ export function IntroModule({ onComplete }: { onComplete: (profile: IntroProfile
       name,
       age,
       gender,
+      ...(beliefFate != null && { beliefFate }),
+      ...(whatMattersMost != null && { whatMattersMost }),
+      ...(superpower != null && { superpower }),
       coreGoal: coreGoal ?? "peace",
       stats,
       suggestedCareer: getSuggestedCareer(stats),
@@ -141,8 +175,14 @@ export function IntroModule({ onComplete }: { onComplete: (profile: IntroProfile
     step === 0
       ? name.trim().length > 0
       : step === 1
-        ? coreGoal !== null
-        : true;
+        ? beliefFate !== null
+        : step === 2
+          ? whatMattersMost !== null
+          : step === 3
+            ? superpower !== null
+            : step === 4
+              ? coreGoal !== null
+              : true;
 
   return (
     <div className="intro-module">
@@ -175,20 +215,82 @@ export function IntroModule({ onComplete }: { onComplete: (profile: IntroProfile
                 className="intro-input"
               />
             </label>
-            <label>
-              你的性別
-              <input
-                type="text"
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                placeholder="例如：男 / 女 / 其他"
-                className="intro-input"
-              />
-            </label>
+            <div className="intro-gender-group">
+              <div className="intro-gender-label">你的性別</div>
+              <div className="intro-options">
+                {["男", "女", "非二元／其他"].map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    className={`btn option-btn ${gender === g ? "selected" : ""}`}
+                    onClick={() => setGender(g)}
+                  >
+                    {g}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
         {step === 1 && (
+          <div className="intro-step">
+            <h2>Belief</h2>
+            <p className="intro-q">Do you believe fate can be changed?</p>
+            <div className="intro-options">
+              {FATE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  className={`btn option-btn ${beliefFate === opt.id ? "selected" : ""}`}
+                  onClick={() => setBeliefFate(opt.id)}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="intro-step">
+            <h2>Priorities</h2>
+            <p className="intro-q">What matters most to you?</p>
+            <div className="intro-options">
+              {WHAT_MATTERS_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  className={`btn option-btn ${whatMattersMost === opt.id ? "selected" : ""}`}
+                  onClick={() => setWhatMattersMost(opt.id)}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="intro-step">
+            <h2>Superpower</h2>
+            <p className="intro-q">If you could have one superpower, what would it be?</p>
+            <div className="intro-options">
+              {SUPERPOWER_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  className={`btn option-btn ${superpower === opt.id ? "selected" : ""}`}
+                  onClick={() => setSuperpower(opt.id)}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === 4 && (
           <div className="intro-step">
             <h2>核心目標</h2>
             <p className="intro-q">你目前最在意的核心目標是？</p>
@@ -207,12 +309,12 @@ export function IntroModule({ onComplete }: { onComplete: (profile: IntroProfile
           </div>
         )}
 
-        {step >= 2 && step <= 5 && (
+        {step >= 5 && step <= 8 && (
           <div className="intro-step">
-            <h2>問題 {step - 1}</h2>
-            <p className="intro-q">{QUESTIONS[step - 2].title}</p>
+            <h2>問題 {step - 4}</h2>
+            <p className="intro-q">{QUESTIONS[step - 5].title}</p>
             <div className="intro-options">
-              {QUESTIONS[step - 2].options.map((opt) => (
+              {QUESTIONS[step - 5].options.map((opt) => (
                 <button
                   key={opt.id}
                   type="button"
@@ -230,7 +332,7 @@ export function IntroModule({ onComplete }: { onComplete: (profile: IntroProfile
           </div>
         )}
 
-        {step === 6 && (
+        {step === 9 && (
           <div className="intro-step intro-result">
             <h2>測驗結果</h2>
             <div className="intro-stats">
@@ -247,7 +349,7 @@ export function IntroModule({ onComplete }: { onComplete: (profile: IntroProfile
           </div>
         )}
 
-        {step < 6 && step !== 2 && step !== 3 && step !== 4 && step !== 5 && (
+        {step < 9 && step !== 5 && step !== 6 && step !== 7 && step !== 8 && (
           <div className="intro-nav">
             <button
               type="button"

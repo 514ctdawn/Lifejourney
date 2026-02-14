@@ -636,6 +636,16 @@ html, body {
   font-weight: 600;
 }
 
+.intro-gender-group {
+  margin-top: 4px;
+}
+
+.intro-gender-label {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
 .intro-input {
   display: block;
   width: 100%;

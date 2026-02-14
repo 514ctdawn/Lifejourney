@@ -99,10 +99,22 @@ export interface IntroStats {
 
 export type CoreGoalId = "money" | "fame" | "peace";
 
+/** Intro questionnaire: belief about fate (for narrative / choice tone) */
+export type BeliefFate = "yes" | "no" | "not_sure";
+
+/** Intro questionnaire: what matters most (influences priorities in scenarios) */
+export type WhatMattersMost = "love" | "career" | "freedom" | "family";
+
+/** Intro questionnaire: superpower preference (personality / risk style) */
+export type SuperpowerChoice = "mind_reading" | "time_travel" | "invisibility" | "healing";
+
 export interface IntroProfile {
   name: string;
   age: string;
   gender: string;
+  beliefFate?: BeliefFate;
+  whatMattersMost?: WhatMattersMost;
+  superpower?: SuperpowerChoice;
   coreGoal: CoreGoalId;
   stats: IntroStats;
   suggestedCareer: string;
