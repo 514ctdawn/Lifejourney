@@ -12,7 +12,6 @@ import { UIManager } from "../uiManager";
 import { HudBars } from "./HudBars";
 import { StatsHistogram } from "./StatsHistogram";
 import { LifeWheel } from "./LifeWheel";
-import { SnakePathBoard, SNAKE_PATH_CELLS } from "./SnakePathBoard";
 import { MapWithMarkers, PATH_LENGTH } from "./MapWithMarkers";
 import { ScenarioCard } from "./ScenarioCard";
 import { ReflectionReport } from "./ReflectionReport";
@@ -220,11 +219,6 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
     }
   };
 
-  const snakeIndex =
-    PATH_LENGTH > 1
-      ? Math.round((pathIndex / (PATH_LENGTH - 1)) * (SNAKE_PATH_CELLS - 1))
-      : 0;
-
   return (
     <div className={`app-shell mood-${mood}`}>
       {/* Desktop: original two-column layout with map */}
@@ -310,7 +304,19 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
           )}
         </div>
         <div className="mobile-map-section">
-          <SnakePathBoard currentIndex={snakeIndex} />
+          {mapError ? (
+            <div className="map-placeholder map-placeholder-mobile">
+              <p>請將地圖圖片放在 <code>public/Map_hk.jpeg</code></p>
+              <p className="muted">然後重新整理頁面。</p>
+            </div>
+          ) : (
+            <MapWithMarkers
+              src={mapImg}
+              alt="人生旅程地圖"
+              progressIndex={pathIndex}
+              onError={() => setMapError(true)}
+            />
+          )}
         </div>
         <footer className="mobile-histogram-wrap">
           <StatsHistogram

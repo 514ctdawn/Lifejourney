@@ -115,6 +115,26 @@ html, body {
   max-width: 100%;
 }
 
+.mobile-map-section .map-image-wrapper,
+.mobile-map-section .map-image {
+  max-width: 100%;
+  border-radius: 12px;
+}
+
+.map-placeholder-mobile {
+  min-height: 200px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: linear-gradient(145deg, #d4c4a0 0%, #c9b896 100%);
+  border-radius: 12px;
+  border: 2px dashed #c9a227;
+  color: #5c4a2a;
+}
+
 /* Histogram: fixed at bottom, ~20% viewport height, Gold / Red / Green vertical bars */
 .mobile-histogram-wrap {
   position: fixed;
