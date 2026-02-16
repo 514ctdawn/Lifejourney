@@ -10,7 +10,9 @@ import {
 } from "../../engine/types";
 import { UIManager } from "../uiManager";
 import { HudBars } from "./HudBars";
+import { MobileHeader } from "./MobileHeader";
 import { LifeWheel } from "./LifeWheel";
+import { SnakePathBoard, SNAKE_PATH_CELLS } from "./SnakePathBoard";
 import { MapWithMarkers, PATH_LENGTH } from "./MapWithMarkers";
 import { ScenarioCard } from "./ScenarioCard";
 import { ReflectionReport } from "./ReflectionReport";
@@ -118,19 +120,21 @@ function getDestinyBonus(profile: IntroProfile | null | undefined, card: DreamCa
 
 export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
   const uiManager = useMemo(() => new UIManager(), []);
-  const [dreamCard, setDreamCard] = useState<DreamCard>(DREAM_CARDS[0]);
+  const dominantTrait = getDominantTrait(profile?.stats);
+  const recommendedDreamId = getRecommendedDreamIdForTrait(dominantTrait);
+  const initialCard = useMemo(() => {
+    const id = recommendedDreamId ?? DREAM_CARDS[0].id;
+    return DREAM_CARDS.find((c) => c.id === id) ?? DREAM_CARDS[0];
+  }, [recommendedDreamId]);
+  const [dreamCard, setDreamCard] = useState<DreamCard>(initialCard);
   const engineRef = useRef<GameEngine | null>(null);
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [lastRoll, setLastRoll] = useState<number | null>(null);
   const [report, setReport] = useState<ReflectionReportData | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [, setTick] = useState(0);
-  const [mapError, setMapError] = useState(false);
-  const mapSrc = mapImg; // resolved with correct base path by Vite
-  const dominantTrait = getDominantTrait(profile?.stats);
-  const recommendedDreamId = getRecommendedDreamIdForTrait(dominantTrait);
-   // Position along the board PATH (0 … PATH_LENGTH-1)
   const [pathIndex, setPathIndex] = useState(0);
+  const [mapError, setMapError] = useState(false);
 
   const ensureEngine = () => {
     if (!engineRef.current) {
@@ -146,6 +150,7 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
     setScenario(engineRef.current.nextScenario() ?? null);
     setReport(null);
     setLastRoll(null);
+    setPathIndex(0);
     setTick((t) => t + 1);
   };
 
@@ -215,76 +220,105 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
     }
   };
 
+  const snakeIndex =
+    PATH_LENGTH > 1
+      ? Math.round((pathIndex / (PATH_LENGTH - 1)) * (SNAKE_PATH_CELLS - 1))
+      : 0;
+
   return (
     <div className={`app-shell mood-${mood}`}>
-      <div className="app-left">
-        <header className="app-header">
-          <div>
-            <h1>人生旅程：數位人生</h1>
-            {profile?.name && (
-              <p className="muted">歡迎，{profile.name}{profile.suggestedCareer ? ` · 建議方向：${profile.suggestedCareer}` : ""}</p>
-            )}
-            {!profile?.name && (
-              <p className="muted">靈感來自任天堂 Switch 的人生模擬</p>
-            )}
-          </div>
-          <div className="dream-card">
-            <label>夢想卡</label>
-            <select
-              value={dreamCard.id}
-              onChange={(event) => {
-                const card = DREAM_CARDS.find((c) => c.id === event.target.value) ?? DREAM_CARDS[0];
-                setDreamCard(card);
-                startNewRun(card);
-              }}
-            >
-              {DREAM_CARDS.map((card) => {
-                const isRecommended = card.id === recommendedDreamId;
-                const prefix = `${card.icon} ${card.label}`;
-                return (
-                  <option key={card.id} value={card.id}>
-                    {isRecommended ? `⭐ ${prefix}` : prefix}
-                  </option>
-                );
-              })}
-            </select>
-            <button className="btn btn-secondary" onClick={() => startNewRun(dreamCard)}>
-              重新開始
-            </button>
-          </div>
-        </header>
-
-        <div className="app-left-scroll">
-          <section className="hud-section">
-            <HudBars bars={uiManager.getHudBars(snapshot)} />
-            <div className="status-panel">
-              <div>階段：{snapshot.stage}</div>
-              <div>剩餘回合：{snapshot.turnsRemaining}</div>
-              <div>一致性：{snapshot.hidden.consistencyScore}</div>
-              <div>醜聞值：{snapshot.hidden.scandalValue}</div>
-            </div>
-          </section>
-
-          <section className="main-grid">
-            <LifeWheel
-              segments={uiManager.buildLifeWheel()}
-              onSpin={onSpin}
-              lastRoll={lastRoll}
-            />
-            <div className="card placeholder-card">
-              {report ? (
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => setShowReport(true)}
-                >
-                  查看人生反思報告
-                </button>
+      {/* Desktop: original two-column layout with map */}
+      <div className="app-desktop">
+        <div className="app-left">
+          <header className="app-header">
+            <div>
+              <h1>人生旅程：數位人生</h1>
+              {profile?.name ? (
+                <p className="muted">{profile.name} · 歡迎進入【未來軌跡】—— 走下去，才知道終點在哪裡。</p>
               ) : (
-                "轉動人生輪盤以抽取情境。"
+                <p className="muted">歡迎進入【未來軌跡】—— 走下去，才知道終點在哪裡。</p>
               )}
             </div>
-          </section>
+          </header>
+          <div className="app-left-scroll">
+            <section className="hud-section">
+              <HudBars bars={uiManager.getHudBars(snapshot)} />
+              <div className="status-panel">
+                <div>階段：{snapshot.stage}</div>
+                <div>剩餘回合：{snapshot.turnsRemaining}</div>
+                <div>一致性：{snapshot.hidden.consistencyScore}</div>
+                <div>醜聞值：{snapshot.hidden.scandalValue}</div>
+              </div>
+            </section>
+            <section className="main-grid">
+              <LifeWheel
+                segments={uiManager.buildLifeWheel()}
+                onSpin={onSpin}
+                lastRoll={lastRoll}
+              />
+              <div className="card placeholder-card">
+                {report ? (
+                  <button type="button" className="btn btn-primary" onClick={() => setShowReport(true)}>
+                    查看人生反思報告
+                  </button>
+                ) : (
+                  "轉動人生輪盤以抽取情境。"
+                )}
+              </div>
+            </section>
+          </div>
+        </div>
+        <div className="app-right map-panel">
+          {mapError ? (
+            <div className="map-placeholder">
+              <p>請將地圖圖片放在 <code>public/Map_hk.jpeg</code></p>
+              <p className="muted">然後重新整理頁面。</p>
+            </div>
+          ) : (
+            <MapWithMarkers
+              src={mapImg}
+              alt="人生旅程地圖"
+              progressIndex={pathIndex}
+              onError={() => setMapError(true)}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Mobile: 20vh header / 60vh main / 20vh action */}
+      <div className="app-mobile">
+        <MobileHeader
+          money={snapshot.lifeStatus.money}
+          stress={snapshot.lifeStatus.stress}
+          happiness={snapshot.lifeStatus.happiness}
+        />
+        <div className="app-main">
+          <div className="app-scroll">
+            <section className="snake-section">
+              <SnakePathBoard currentIndex={snakeIndex} />
+            </section>
+            <div className="wheel-wrap wheel-wrap-mobile">
+              <LifeWheel
+                segments={uiManager.buildLifeWheel()}
+                onSpin={onSpin}
+                lastRoll={lastRoll}
+              />
+            </div>
+          </div>
+          <footer className="app-action">
+            <button
+              type="button"
+              className="btn btn-primary btn-spin-main"
+              onClick={() => document.querySelector<HTMLButtonElement>(".app-mobile .wheel-spin-btn")?.click()}
+            >
+              SPIN
+            </button>
+            {report && (
+              <button type="button" className="btn btn-primary btn-report-cta" onClick={() => setShowReport(true)}>
+                查看人生反思報告
+              </button>
+            )}
+          </footer>
         </div>
       </div>
 
@@ -311,22 +345,6 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
           </div>
         </div>
       )}
-
-      <div className="app-right map-panel">
-        {mapError ? (
-          <div className="map-placeholder">
-            <p>請將地圖圖片放在 <code>public/Map_hk.jpeg</code></p>
-            <p className="muted">然後重新整理頁面。</p>
-          </div>
-        ) : (
-          <MapWithMarkers
-            src={mapSrc}
-            alt="人生旅程地圖"
-            progressIndex={pathIndex}
-            onError={() => setMapError(true)}
-          />
-        )}
-      </div>
     </div>
   );
 }

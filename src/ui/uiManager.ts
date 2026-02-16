@@ -13,6 +13,15 @@ export class UIManager {
     return "normal";
   }
 
+  /** Sticky header: Money ($), Stress (%), Happiness (smile) — for mobile-first UI */
+  getHeaderBars(snapshot: PlayerSnapshot) {
+    return [
+      { id: "money", label: "金錢", value: snapshot.lifeStatus.money, type: "money" as const },
+      { id: "stress", label: "壓力", value: snapshot.lifeStatus.stress, type: "progress" as const },
+      { id: "happiness", label: "快樂", value: snapshot.lifeStatus.happiness, type: "progress" as const },
+    ];
+  }
+
   getHudBars(snapshot: PlayerSnapshot) {
     return [
       { id: "I", label: "智力", value: snapshot.attributes.I },
