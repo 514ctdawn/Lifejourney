@@ -136,6 +136,8 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
   const [mapError, setMapError] = useState(false);
   const [floatingDeltas, setFloatingDeltas] = useState<{ money?: number; stress?: number; happiness?: number } | null>(null);
   const [showTraitsPanel, setShowTraitsPanel] = useState(false);
+  const [showWheelOnMobile, setShowWheelOnMobile] = useState(false);
+  const [showStatsPanel, setShowStatsPanel] = useState(false);
 
   const ensureEngine = () => {
     if (!engineRef.current) {
@@ -162,12 +164,14 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
   const onSpin = () => {
     const roll = engine.spinLifeWheel();
     setLastRoll(roll);
-    // Every spin should advance to the next life scenario.
+    return roll;
+  };
+
+  const onSpinComplete = () => {
     const next = engine.nextScenario();
     if (next) {
       setScenario(next);
     } else {
-      // Absolute fallback: never get stuck without a question.
       setScenario({
         id: "fallback",
         stage: snapshot.stage,
@@ -181,7 +185,6 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
         ],
       });
     }
-    return roll;
   };
 
   const isOptionLocked = (option: ScenarioOption) => {
@@ -258,6 +261,7 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
               <LifeWheel
                 segments={uiManager.buildLifeWheel()}
                 onSpin={onSpin}
+                onSpinComplete={onSpinComplete}
                 lastRoll={lastRoll}
               />
               <div className="card placeholder-card">
@@ -289,44 +293,19 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
         </div>
       </div>
 
-      {/* Mobile (<768px): slogan → wheel (top) → map (middle, scrollable) → histogram (bottom 1/5) */}
+      {/* Mobile: spin button on top → wheel (only after first spin click) → full-page map → ? stats button */}
       <div className="app-mobile">
-        <header className="mobile-slogan">
-          <div className="mobile-slogan-row">
-            <h1 className="mobile-slogan-title">人生旅程：數位人生</h1>
-            <button
-              type="button"
-              className="mobile-avatar-btn"
-              onClick={() => setShowTraitsPanel((v) => !v)}
-              aria-label="性格特質"
-              aria-expanded={showTraitsPanel}
-            >
-              <span className="mobile-avatar-icon">●</span>
-            </button>
-          </div>
-          <p className="mobile-slogan-subtitle">
-            {profile?.name ? `${profile.name} · 歡迎進入【未來軌跡】—— 走下去，才知道終點在哪裡。` : "歡迎進入【未來軌跡】—— 走下去，才知道終點在哪裡。"}
-          </p>
-          {showTraitsPanel && profile?.stats && (
-            <div className="mobile-traits-panel">
-              <div className="mobile-traits-item"><span>成就抱負</span><span>{profile.stats.Ambition}</span></div>
-              <div className="mobile-traits-item"><span>創新思維</span><span>{profile.stats.Creativity}</span></div>
-              <div className="mobile-traits-item"><span>穩定安全</span><span>{profile.stats.Stability}</span></div>
-            </div>
-          )}
-        </header>
-        <div className="mobile-wheel-section">
-          <div className="wheel-wrap wheel-wrap-mobile">
-            <LifeWheel
-              segments={uiManager.buildLifeWheel()}
-              onSpin={onSpin}
-              lastRoll={lastRoll}
-            />
-          </div>
+        <div className="mobile-top-bar">
           <button
             type="button"
             className="btn btn-primary btn-spin-main"
-            onClick={() => document.querySelector<HTMLButtonElement>(".app-mobile .wheel-spin-btn")?.click()}
+            onClick={() => {
+              if (!showWheelOnMobile) setShowWheelOnMobile(true);
+              setTimeout(
+                () => document.querySelector<HTMLButtonElement>(".app-mobile .wheel-spin-btn")?.click(),
+                showWheelOnMobile ? 0 : 250
+              );
+            }}
           >
             轉動人生輪盤
           </button>
@@ -336,6 +315,18 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
             </button>
           )}
         </div>
+        {showWheelOnMobile && (
+          <div className="mobile-wheel-section">
+            <div className="wheel-wrap wheel-wrap-mobile">
+              <LifeWheel
+                segments={uiManager.buildLifeWheel()}
+                onSpin={onSpin}
+                onSpinComplete={onSpinComplete}
+                lastRoll={lastRoll}
+              />
+            </div>
+          </div>
+        )}
         <div className="mobile-map-section">
           {mapError ? (
             <div className="map-placeholder map-placeholder-mobile">
@@ -351,7 +342,7 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
             />
           )}
         </div>
-        <footer className="mobile-histogram-wrap">
+        <footer className="mobile-bottom-bar">
           {floatingDeltas && (
             <div className="floating-deltas" role="status" aria-live="polite">
               {floatingDeltas.money !== undefined && floatingDeltas.money !== 0 && (
@@ -371,14 +362,45 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
               )}
             </div>
           )}
-          <StatsHistogram
-            key={`${snapshot.lifeStatus.money}-${snapshot.lifeStatus.stress}-${snapshot.lifeStatus.happiness}`}
-            money={snapshot.lifeStatus.money}
-            stress={snapshot.lifeStatus.stress}
-            happiness={snapshot.lifeStatus.happiness}
-          />
+          <button
+            type="button"
+            className="mobile-stats-btn"
+            onClick={() => setShowStatsPanel(true)}
+            aria-label="查看數值"
+          >
+            ?
+          </button>
         </footer>
       </div>
+
+      {showStatsPanel && (
+        <div
+          className="mobile-stats-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="數值報告"
+          onClick={() => setShowStatsPanel(false)}
+        >
+          <div className="mobile-stats-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="mobile-stats-panel-header">
+              <h3>數值報告</h3>
+              <button type="button" className="mobile-stats-close" onClick={() => setShowStatsPanel(false)} aria-label="關閉">
+                ×
+              </button>
+            </div>
+            <div className="mobile-stats-grid">
+              <div className="mobile-stats-row"><span>智力</span><span>{snapshot.attributes.I}</span></div>
+              <div className="mobile-stats-row"><span>體能</span><span>{snapshot.attributes.R}</span></div>
+              <div className="mobile-stats-row"><span>靈感</span><span>{snapshot.attributes.A}</span></div>
+              <div className="mobile-stats-row"><span>運氣</span><span>{snapshot.attributes.L}</span></div>
+              <div className="mobile-stats-row"><span>金錢</span><span>{snapshot.lifeStatus.money}</span></div>
+              <div className="mobile-stats-row"><span>壓力</span><span>{snapshot.lifeStatus.stress}</span></div>
+              <div className="mobile-stats-row"><span>快樂</span><span>{snapshot.lifeStatus.happiness}</span></div>
+              <div className="mobile-stats-row"><span>誠信</span><span>{snapshot.lifeStatus.integrity}</span></div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {scenario && (
         <div className="scenario-popup-overlay" role="dialog" aria-modal="true" aria-labelledby="scenario-popup-title">

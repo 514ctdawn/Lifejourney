@@ -9,10 +9,12 @@ const SEGMENT_DEG = 360 / 6;
 export function LifeWheel({
   segments,
   onSpin,
+  onSpinComplete,
   lastRoll,
 }: {
   segments: WheelSegment[];
   onSpin: () => number;
+  onSpinComplete?: () => void;
   lastRoll: number | null;
 }) {
   const [rotation, setRotation] = useState(0);
@@ -30,7 +32,10 @@ export function LifeWheel({
     const totalRotation = rotationRef.current + extraTurns + delta;
     rotationRef.current = totalRotation;
     setRotation(totalRotation);
-    setTimeout(() => setIsSpinning(false), 3500);
+    setTimeout(() => {
+      setIsSpinning(false);
+      onSpinComplete?.();
+    }, 3500);
   };
 
   return (
