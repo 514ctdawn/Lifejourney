@@ -293,8 +293,12 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
         </div>
       </div>
 
-      {/* Mobile: spin button on top → wheel (only after first spin click) → full-page map → ? stats button */}
+      {/* Mobile: title + button + map always shown; wheel only while spinning, then question shows */}
       <div className="app-mobile">
+        <header className="mobile-header">
+          <h1 className="mobile-title">人生旅程：數位人生</h1>
+          {profile?.name && <p className="mobile-subtitle muted">{profile.name}</p>}
+        </header>
         <div className="mobile-top-bar">
           <button
             type="button"
@@ -321,7 +325,10 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
               <LifeWheel
                 segments={uiManager.buildLifeWheel()}
                 onSpin={onSpin}
-                onSpinComplete={onSpinComplete}
+                onSpinComplete={() => {
+                  onSpinComplete();
+                  setShowWheelOnMobile(false);
+                }}
                 lastRoll={lastRoll}
               />
             </div>
