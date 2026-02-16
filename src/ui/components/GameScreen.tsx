@@ -10,7 +10,7 @@ import {
 } from "../../engine/types";
 import { UIManager } from "../uiManager";
 import { HudBars } from "./HudBars";
-import { MobileHeader } from "./MobileHeader";
+import { StatsHistogram } from "./StatsHistogram";
 import { LifeWheel } from "./LifeWheel";
 import { SnakePathBoard, SNAKE_PATH_CELLS } from "./SnakePathBoard";
 import { MapWithMarkers, PATH_LENGTH } from "./MapWithMarkers";
@@ -285,41 +285,40 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
         </div>
       </div>
 
-      {/* Mobile: 20vh header / 60vh main / 20vh action */}
+      {/* Mobile (<768px): slogan → wheel (top) → map (middle, scrollable) → histogram (bottom 1/5) */}
       <div className="app-mobile">
-        <MobileHeader
-          money={snapshot.lifeStatus.money}
-          stress={snapshot.lifeStatus.stress}
-          happiness={snapshot.lifeStatus.happiness}
-        />
-        <div className="app-main">
-          <div className="app-scroll">
-            <section className="snake-section">
-              <SnakePathBoard currentIndex={snakeIndex} />
-            </section>
-            <div className="wheel-wrap wheel-wrap-mobile">
-              <LifeWheel
-                segments={uiManager.buildLifeWheel()}
-                onSpin={onSpin}
-                lastRoll={lastRoll}
-              />
-            </div>
+        <header className="mobile-slogan">歡迎來到【未來軌跡】</header>
+        <div className="mobile-wheel-section">
+          <div className="wheel-wrap wheel-wrap-mobile">
+            <LifeWheel
+              segments={uiManager.buildLifeWheel()}
+              onSpin={onSpin}
+              lastRoll={lastRoll}
+            />
           </div>
-          <footer className="app-action">
-            <button
-              type="button"
-              className="btn btn-primary btn-spin-main"
-              onClick={() => document.querySelector<HTMLButtonElement>(".app-mobile .wheel-spin-btn")?.click()}
-            >
-              SPIN
+          <button
+            type="button"
+            className="btn btn-primary btn-spin-main"
+            onClick={() => document.querySelector<HTMLButtonElement>(".app-mobile .wheel-spin-btn")?.click()}
+          >
+            SPIN
+          </button>
+          {report && (
+            <button type="button" className="btn btn-primary btn-report-cta" onClick={() => setShowReport(true)}>
+              查看人生反思報告
             </button>
-            {report && (
-              <button type="button" className="btn btn-primary btn-report-cta" onClick={() => setShowReport(true)}>
-                查看人生反思報告
-              </button>
-            )}
-          </footer>
+          )}
         </div>
+        <div className="mobile-map-section">
+          <SnakePathBoard currentIndex={snakeIndex} />
+        </div>
+        <footer className="mobile-histogram-wrap">
+          <StatsHistogram
+            money={snapshot.lifeStatus.money}
+            stress={snapshot.lifeStatus.stress}
+            happiness={snapshot.lifeStatus.happiness}
+          />
+        </footer>
       </div>
 
       {scenario && (
