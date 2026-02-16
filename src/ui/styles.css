@@ -70,15 +70,11 @@ html, body {
   overflow-x: hidden;
 }
 
-/* Small fixed slogan at very top */
+/* Title + subtitle at very top (phone) */
 .mobile-slogan {
   flex-shrink: 0;
   margin: 0;
-  padding: 10px 16px;
-  font-size: 0.9375rem;
-  font-weight: 700;
-  line-height: 1.3;
-  color: var(--ink);
+  padding: 10px 16px 12px;
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -87,6 +83,81 @@ html, body {
   z-index: 8;
   position: sticky;
   top: 0;
+}
+
+.mobile-slogan-title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.mobile-slogan-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.mobile-slogan-title {
+  margin: 0;
+}
+
+.mobile-avatar-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--grape);
+  background: rgba(122, 108, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s;
+}
+
+.mobile-avatar-btn:hover {
+  background: rgba(122, 108, 255, 0.25);
+}
+
+.mobile-avatar-icon {
+  font-size: 1rem;
+  color: var(--grape);
+  line-height: 1;
+}
+
+.mobile-traits-panel {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  display: grid;
+  gap: 6px;
+}
+
+.mobile-traits-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: var(--ink);
+}
+
+.mobile-traits-item span:last-child {
+  font-weight: 700;
+}
+
+.mobile-slogan-subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--ink);
+  opacity: 0.88;
 }
 
 /* Wheel section: very top of content, centered, 70–80vw */
@@ -155,6 +226,17 @@ html, body {
   z-index: 10;
 }
 
+.mobile-histogram-wrap .stats-histogram-bar {
+  transform-origin: bottom;
+  animation: histogram-bump 0.6s ease-out;
+}
+
+@keyframes histogram-bump {
+  0% { transform: scaleY(1); }
+  35% { transform: scaleY(1.06); }
+  100% { transform: scaleY(1); }
+}
+
 .mobile-histogram-wrap .stats-histogram {
   flex: 1 1 0;
   min-height: 0;
@@ -191,15 +273,15 @@ html, body {
 }
 
 .mobile-histogram-wrap .stats-bar-money {
-  background: linear-gradient(180deg, #fcd34d, #d97706);
+  background: linear-gradient(180deg, #b8a065, #8b7355);
 }
 
 .mobile-histogram-wrap .stats-bar-stress {
-  background: linear-gradient(180deg, #f87171, #dc2626);
+  background: linear-gradient(180deg, #a67c7c, #8b5a5a);
 }
 
 .mobile-histogram-wrap .stats-bar-happiness {
-  background: linear-gradient(180deg, #4ade80, #22c55e);
+  background: linear-gradient(180deg, #7d997d, #5c7a5c);
 }
 
 .mobile-histogram-wrap .stats-histogram-labels {
@@ -219,6 +301,50 @@ html, body {
   color: var(--ink);
   opacity: 0.85;
 }
+
+/* Floating delta numbers above histogram (fade in/out) */
+.floating-deltas {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 16px;
+  padding: 0 8px 8px;
+  pointer-events: none;
+  animation: floating-deltas-in 0.4s ease-out forwards;
+}
+
+@keyframes floating-deltas-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.floating-delta {
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  animation: floating-delta-fade 2.5s ease-in-out forwards;
+}
+
+@keyframes floating-delta-fade {
+  0%, 15% { opacity: 1; }
+  85%, 100% { opacity: 0; }
+}
+
+.floating-delta-money { background: rgba(184, 160, 101, 0.25); color: #5c4a2a; }
+.floating-delta-stress { background: rgba(166, 124, 124, 0.25); color: #5c3a3a; }
+.floating-delta-happiness { background: rgba(125, 153, 125, 0.25); color: #2d4a2d; }
 
 /* Shared histogram styles (when used elsewhere) */
 .stats-histogram {
@@ -257,18 +383,18 @@ html, body {
 }
 
 .stats-bar-money {
-  background: linear-gradient(180deg, #fcd34d, #d97706);
-  box-shadow: 0 -2px 8px rgba(217, 119, 6, 0.3);
+  background: linear-gradient(180deg, #b8a065, #8b7355);
+  box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .stats-bar-stress {
-  background: linear-gradient(180deg, #f87171, #dc2626);
-  box-shadow: 0 -2px 8px rgba(220, 38, 38, 0.3);
+  background: linear-gradient(180deg, #a67c7c, #8b5a5a);
+  box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .stats-bar-happiness {
-  background: linear-gradient(180deg, #4ade80, #22c55e);
-  box-shadow: 0 -2px 8px rgba(34, 197, 94, 0.3);
+  background: linear-gradient(180deg, #7d997d, #5c7a5c);
+  box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .stats-histogram-labels {
@@ -988,7 +1114,7 @@ html, body {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4);
   cursor: grab;
   z-index: 3;
-  transition: box-shadow 0.15s ease;
+  transition: left 0.5s ease-in-out, top 0.5s ease-in-out, box-shadow 0.15s ease;
 }
 
 .map-dot:hover {

@@ -69,13 +69,18 @@ export function MapWithMarkers({
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // When game advances along the path (e.g. after answering a question),
-  // snap the green dot to that PATH index.
+  const dotRef = useRef<HTMLDivElement>(null);
+
+  // When game advances along the path, animate dot to new position then scroll into view.
   useEffect(() => {
     if (typeof progressIndex !== "number") return;
     const idx = Math.max(0, Math.min(PATH.length - 1, progressIndex));
     const target = PATH[idx];
     setDotPosition(target);
+    const t = setTimeout(() => {
+      dotRef.current?.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+    }, 520);
+    return () => clearTimeout(t);
   }, [progressIndex]);
 
   const handlePointerDown = useCallback(
@@ -128,6 +133,7 @@ export function MapWithMarkers({
           <FlagIcon type="end" />
         </div>
         <div
+          ref={dotRef}
           className={`map-dot ${isDragging ? "map-dot-dragging" : ""}`}
           style={{ left: `${dotPosition.x}%`, top: `${dotPosition.y}%`, transform: "translate(-50%, -50%)" }}
           onPointerDown={handlePointerDown}

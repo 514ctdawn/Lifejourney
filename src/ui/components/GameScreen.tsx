@@ -134,6 +134,8 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
   const [, setTick] = useState(0);
   const [pathIndex, setPathIndex] = useState(0);
   const [mapError, setMapError] = useState(false);
+  const [floatingDeltas, setFloatingDeltas] = useState<{ money?: number; stress?: number; happiness?: number } | null>(null);
+  const [showTraitsPanel, setShowTraitsPanel] = useState(false);
 
   const ensureEngine = () => {
     if (!engineRef.current) {
@@ -204,15 +206,23 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
 
   const handleOptionPick = (optionId: ScenarioOption["id"]) => {
     if (!scenario) return;
+    const option = scenario.options.find((o) => o.id === optionId);
+    const lifeDelta = option?.effect?.lifeStatus;
     engine.resolveScenario(scenario.id, optionId);
-    // After answering, close the question card.
     setScenario(null);
-    // Move the green marker along the path by the last wheel result.
     if (lastRoll) {
       setPathIndex((prev) => Math.min(prev + lastRoll, PATH_LENGTH - 1));
       setLastRoll(null);
     }
     setTick((t) => t + 1);
+    if (lifeDelta && (lifeDelta.money !== undefined || lifeDelta.stress !== undefined || lifeDelta.happiness !== undefined)) {
+      setFloatingDeltas({
+        money: lifeDelta.money,
+        stress: lifeDelta.stress,
+        happiness: lifeDelta.happiness,
+      });
+      setTimeout(() => setFloatingDeltas(null), 2500);
+    }
     if (engine.snapshot.turnsRemaining === 0) {
       setReport(engine.generateLifeReflectionReport(profile ?? null));
       setShowReport(true);
@@ -281,7 +291,30 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
 
       {/* Mobile (<768px): slogan → wheel (top) → map (middle, scrollable) → histogram (bottom 1/5) */}
       <div className="app-mobile">
-        <header className="mobile-slogan">歡迎來到【未來軌跡】</header>
+        <header className="mobile-slogan">
+          <div className="mobile-slogan-row">
+            <h1 className="mobile-slogan-title">人生旅程：數位人生</h1>
+            <button
+              type="button"
+              className="mobile-avatar-btn"
+              onClick={() => setShowTraitsPanel((v) => !v)}
+              aria-label="性格特質"
+              aria-expanded={showTraitsPanel}
+            >
+              <span className="mobile-avatar-icon">●</span>
+            </button>
+          </div>
+          <p className="mobile-slogan-subtitle">
+            {profile?.name ? `${profile.name} · 歡迎進入【未來軌跡】—— 走下去，才知道終點在哪裡。` : "歡迎進入【未來軌跡】—— 走下去，才知道終點在哪裡。"}
+          </p>
+          {showTraitsPanel && profile?.stats && (
+            <div className="mobile-traits-panel">
+              <div className="mobile-traits-item"><span>成就抱負</span><span>{profile.stats.Ambition}</span></div>
+              <div className="mobile-traits-item"><span>創新思維</span><span>{profile.stats.Creativity}</span></div>
+              <div className="mobile-traits-item"><span>穩定安全</span><span>{profile.stats.Stability}</span></div>
+            </div>
+          )}
+        </header>
         <div className="mobile-wheel-section">
           <div className="wheel-wrap wheel-wrap-mobile">
             <LifeWheel
@@ -295,7 +328,7 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
             className="btn btn-primary btn-spin-main"
             onClick={() => document.querySelector<HTMLButtonElement>(".app-mobile .wheel-spin-btn")?.click()}
           >
-            SPIN
+            轉動人生輪盤
           </button>
           {report && (
             <button type="button" className="btn btn-primary btn-report-cta" onClick={() => setShowReport(true)}>
@@ -319,7 +352,27 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
           )}
         </div>
         <footer className="mobile-histogram-wrap">
+          {floatingDeltas && (
+            <div className="floating-deltas" role="status" aria-live="polite">
+              {floatingDeltas.money !== undefined && floatingDeltas.money !== 0 && (
+                <span className="floating-delta floating-delta-money">
+                  {floatingDeltas.money > 0 ? "+" : ""}{floatingDeltas.money} 金錢
+                </span>
+              )}
+              {floatingDeltas.stress !== undefined && floatingDeltas.stress !== 0 && (
+                <span className="floating-delta floating-delta-stress">
+                  {floatingDeltas.stress > 0 ? "+" : ""}{floatingDeltas.stress} 壓力
+                </span>
+              )}
+              {floatingDeltas.happiness !== undefined && floatingDeltas.happiness !== 0 && (
+                <span className="floating-delta floating-delta-happiness">
+                  {floatingDeltas.happiness > 0 ? "+" : ""}{floatingDeltas.happiness} 幸福感
+                </span>
+              )}
+            </div>
+          )}
           <StatsHistogram
+            key={`${snapshot.lifeStatus.money}-${snapshot.lifeStatus.stress}-${snapshot.lifeStatus.happiness}`}
             money={snapshot.lifeStatus.money}
             stress={snapshot.lifeStatus.stress}
             happiness={snapshot.lifeStatus.happiness}
