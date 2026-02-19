@@ -12,10 +12,13 @@ import { UIManager } from "../uiManager";
 import { HudBars } from "./HudBars";
 import { StatsHistogram } from "./StatsHistogram";
 import { LifeWheel } from "./LifeWheel";
-import { MapWithMarkers, PATH_LENGTH } from "./MapWithMarkers";
+import { MapWithMarkers, MAX_PROGRESS_INDEX } from "./MapWithMarkers";
 import { ScenarioCard } from "./ScenarioCard";
 import { ReflectionReport } from "./ReflectionReport";
-import mapImg from "/Map_hk.jpeg";
+import mapImg from "/updated map.png";
+import femaleSprite from "/female.png";
+import maleSprite from "/male.png";
+import bearSprite from "/bear.png";
 
 type DreamCardWithIcon = DreamCard & { icon: string; subtitle: string };
 
@@ -78,8 +81,8 @@ type ReflectionReportData = {
   suggestedJobs: { title: string; description: string }[];
 };
 
-// Shorter run length so players can more easily reach the final report.
-const TOTAL_TURNS = 20;
+// Full 50 scenarios (階段一～五)
+const TOTAL_TURNS = 50;
 
 function getDominantTrait(stats: IntroStats | undefined | null): IntroStatKey | null {
   if (!stats) return null;
@@ -138,6 +141,15 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
   const [showTraitsPanel, setShowTraitsPanel] = useState(false);
   const [showWheelOnMobile, setShowWheelOnMobile] = useState(false);
   const [showStatsPanel, setShowStatsPanel] = useState(false);
+
+  const markerSprite =
+    profile?.gender === "女"
+      ? femaleSprite
+      : profile?.gender === "男"
+        ? maleSprite
+        : profile?.gender
+          ? bearSprite
+          : undefined;
 
   const ensureEngine = () => {
     if (!engineRef.current) {
@@ -214,7 +226,19 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
     engine.resolveScenario(scenario.id, optionId);
     setScenario(null);
     if (lastRoll) {
-      setPathIndex((prev) => Math.min(prev + lastRoll, PATH_LENGTH - 1));
+      const start = pathIndex;
+      const target = Math.min(start + lastRoll, MAX_PROGRESS_INDEX);
+      if (target > start) {
+        let current = start;
+        const stepOnce = () => {
+          current += 1;
+          setPathIndex(current);
+          if (current < target) {
+            setTimeout(stepOnce, 220);
+          }
+        };
+        setTimeout(stepOnce, 220);
+      }
       setLastRoll(null);
     }
     setTick((t) => t + 1);
@@ -279,7 +303,7 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
         <div className="app-right map-panel">
           {mapError ? (
             <div className="map-placeholder">
-              <p>請將地圖圖片放在 <code>public/Map_hk.jpeg</code></p>
+              <p>請將地圖圖片放在 <code>public/updated map.png</code></p>
               <p className="muted">然後重新整理頁面。</p>
             </div>
           ) : (
@@ -287,6 +311,7 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
               src={mapImg}
               alt="人生旅程地圖"
               progressIndex={pathIndex}
+              markerSprite={markerSprite}
               onError={() => setMapError(true)}
             />
           )}
@@ -337,7 +362,7 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
         <div className="mobile-map-section">
           {mapError ? (
             <div className="map-placeholder map-placeholder-mobile">
-              <p>請將地圖圖片放在 <code>public/Map_hk.jpeg</code></p>
+              <p>請將地圖圖片放在 <code>public/updated map.png</code></p>
               <p className="muted">然後重新整理頁面。</p>
             </div>
           ) : (
@@ -345,6 +370,7 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
               src={mapImg}
               alt="人生旅程地圖"
               progressIndex={pathIndex}
+              markerSprite={markerSprite}
               onError={() => setMapError(true)}
             />
           )}
@@ -417,6 +443,10 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
               onPick={handleOptionPick}
               isOptionLocked={isOptionLocked}
               titleId="scenario-popup-title"
+              speakerSprite={markerSprite}
+              speakerName={
+                profile?.gender === "女" ? "Girl" : profile?.gender === "男" ? "Boy" : profile?.gender ? "Bear" : "Player"
+              }
             />
           </div>
         </div>

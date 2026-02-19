@@ -66,6 +66,10 @@ export function IntroModule({ onComplete }: { onComplete: (profile: IntroProfile
   const [coreGoal, setCoreGoal] = useState<CoreGoalId | null>(null);
   const [stats, setStats] = useState<IntroStats>({ ...INITIAL_STATS });
 
+  const goToNextStep = () => {
+    setStep((s) => Math.min(s + 1, 5));
+  };
+
   const handleStart = () => {
     const profile: IntroProfile = {
       name,
@@ -148,7 +152,10 @@ export function IntroModule({ onComplete }: { onComplete: (profile: IntroProfile
                   key={opt.id}
                   type="button"
                   className={`btn option-btn ${beliefFate === opt.id ? "selected" : ""}`}
-                  onClick={() => setBeliefFate(opt.id)}
+                  onClick={() => {
+                    setBeliefFate(opt.id);
+                    goToNextStep();
+                  }}
                 >
                   {opt.label}
                 </button>
@@ -167,7 +174,10 @@ export function IntroModule({ onComplete }: { onComplete: (profile: IntroProfile
                   key={opt.id}
                   type="button"
                   className={`btn option-btn ${whatMattersMost === opt.id ? "selected" : ""}`}
-                  onClick={() => setWhatMattersMost(opt.id)}
+                  onClick={() => {
+                    setWhatMattersMost(opt.id);
+                    goToNextStep();
+                  }}
                 >
                   {opt.label}
                 </button>
@@ -186,7 +196,10 @@ export function IntroModule({ onComplete }: { onComplete: (profile: IntroProfile
                   key={opt.id}
                   type="button"
                   className={`btn option-btn ${superpower === opt.id ? "selected" : ""}`}
-                  onClick={() => setSuperpower(opt.id)}
+                  onClick={() => {
+                    setSuperpower(opt.id);
+                    goToNextStep();
+                  }}
                 >
                   {opt.label}
                 </button>
@@ -205,7 +218,10 @@ export function IntroModule({ onComplete }: { onComplete: (profile: IntroProfile
                   key={g.id}
                   type="button"
                   className={`btn option-btn ${coreGoal === g.id ? "selected" : ""}`}
-                  onClick={() => setCoreGoal(g.id)}
+                  onClick={() => {
+                    setCoreGoal(g.id);
+                    goToNextStep();
+                  }}
                 >
                   {g.label}
                 </button>
@@ -228,7 +244,7 @@ export function IntroModule({ onComplete }: { onComplete: (profile: IntroProfile
           </div>
         )}
 
-        {step < 5 && (
+        {step === 0 && (
           <div className="intro-nav">
             <button
               type="button"

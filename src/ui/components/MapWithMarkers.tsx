@@ -4,16 +4,16 @@ type Point = { x: number; y: number };
 
 // Path as percentage (0–100): start (green flag) mid-left, end (red flag) upper-right
 const PATH: Point[] = [
-  { x: 20, y: 50 }, // index 0 → GREEN FLAG
+  { x: 50, y: 20 }, // index 0 → GREEN FLAG
   { x: 60, y: 45 },
   { x: 67, y: 40 },
   { x: 74, y: 34 },
   { x: 78, y: 30 },
-  { x: 82, y: 31 }, // last index → RED FLAG
+  { x: 75, y: 82 }, // last index → RED FLAG
 ];
 
-// Export length so game logic can move along the path by index
-export const PATH_LENGTH = PATH.length;
+// Max progress index (0 = start, 50 = end). Game uses 50 turns → progress 0..50.
+export const MAX_PROGRESS_INDEX = 50;
 
 function nearestPointOnPath(path: Point[], p: Point): Point {
   let best: Point = path[0];
@@ -58,29 +58,39 @@ export function MapWithMarkers({
   alt,
   onError,
   progressIndex,
+  markerSprite,
 }: {
   src: string;
   alt: string;
   onError?: () => void;
-  /** Optional: discrete progress along PATH (0 … PATH_LENGTH-1) */
+  /** Optional: progress 0..MAX_PROGRESS_INDEX (0 = start, 50 = end) */
   progressIndex?: number;
+  /** Optional: custom sprite image for the moving dot */
+  markerSprite?: string;
 }) {
   const [dotPosition, setDotPosition] = useState<Point>(START);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const dotRef = useRef<HTMLDivElement>(null);
+  const dotRef = useRef<HTMLDivElement | HTMLImageElement | null>(null);
 
-  // When game advances along the path, animate dot to new position then scroll into view.
+  // Map progressIndex 0..MAX_PROGRESS_INDEX to position along PATH (interpolate between 6 points).
   useEffect(() => {
     if (typeof progressIndex !== "number") return;
-    const idx = Math.max(0, Math.min(PATH.length - 1, progressIndex));
-    const target = PATH[idx];
+    const t = Math.max(0, Math.min(1, progressIndex / MAX_PROGRESS_INDEX));
+    const seg = t * (PATH.length - 1);
+    const i = Math.floor(seg);
+    const j = Math.min(i + 1, PATH.length - 1);
+    const f = seg - i;
+    const target: Point = {
+      x: PATH[i].x + f * (PATH[j].x - PATH[i].x),
+      y: PATH[i].y + f * (PATH[j].y - PATH[i].y),
+    };
     setDotPosition(target);
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       dotRef.current?.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
     }, 520);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [progressIndex]);
 
   const handlePointerDown = useCallback(
@@ -119,32 +129,39 @@ export function MapWithMarkers({
       />
       <div className="map-overlay" aria-hidden>
         <div
-          className="map-flag-wrap map-flag-start"
-          style={{ left: `${START.x}%`, top: `${START.y}%` }}
-          title="起點"
-        >
-          <FlagIcon type="start" />
-        </div>
-        <div
           className="map-flag-wrap map-flag-end"
           style={{ left: `${END.x}%`, top: `${END.y}%` }}
           title="終點"
         >
           <FlagIcon type="end" />
         </div>
-        <div
-          ref={dotRef}
-          className={`map-dot ${isDragging ? "map-dot-dragging" : ""}`}
-          style={{ left: `${dotPosition.x}%`, top: `${dotPosition.y}%`, transform: "translate(-50%, -50%)" }}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerLeave={handlePointerUp}
-          role="button"
-          tabIndex={0}
-          title="沿路徑拖動"
-          aria-label="沿路徑移動標記"
-        />
+        {markerSprite ? (
+          <div
+            ref={dotRef as React.MutableRefObject<HTMLDivElement | null>}
+            className={`map-dot-sprite-wrap ${isDragging ? "map-dot-dragging" : ""}`}
+            style={{ left: `${dotPosition.x}%`, top: `${dotPosition.y}%` }}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+          >
+            <img src={markerSprite} alt="玩家位置" className="map-dot-sprite" />
+          </div>
+        ) : (
+          <div
+            ref={dotRef as React.MutableRefObject<HTMLDivElement | null>}
+            className={`map-dot ${isDragging ? "map-dot-dragging" : ""}`}
+            style={{ left: `${dotPosition.x}%`, top: `${dotPosition.y}%`, transform: "translate(-50%, -50%)" }}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+            role="button"
+            tabIndex={0}
+            title="沿路徑拖動"
+            aria-label="沿路徑移動標記"
+          />
+        )}
       </div>
     </div>
   );

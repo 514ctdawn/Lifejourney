@@ -82,6 +82,7 @@ export class GameEngine {
   private scenarioHandler: ScenarioDataHandler;
   private history: ScenarioResult[] = [];
   private player: PlayerState;
+  private usedScenarioIds: Set<string> = new Set();
 
   constructor(
     dreamCard: DreamCard,
@@ -109,7 +110,7 @@ export class GameEngine {
   }
 
   nextScenario(): Scenario | undefined {
-    return this.scenarioHandler.pickNextScenario(this.player.stage);
+    return this.scenarioHandler.pickNextScenario(this.player.stage, this.usedScenarioIds);
   }
 
   resolveScenario(scenarioId: string, optionId: ScenarioOption["id"]): ScenarioResult {
@@ -176,6 +177,7 @@ export class GameEngine {
     };
 
     this.history.push(result);
+    this.usedScenarioIds.add(scenarioId);
     return result;
   }
 
