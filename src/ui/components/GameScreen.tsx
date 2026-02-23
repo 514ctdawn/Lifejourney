@@ -15,7 +15,7 @@ import { LifeWheel } from "./LifeWheel";
 import { MapWithMarkers, MAX_PROGRESS_INDEX } from "./MapWithMarkers";
 import { ScenarioCard } from "./ScenarioCard";
 import { ReflectionReport } from "./ReflectionReport";
-import mapImg from "/updated map.png";
+import mapImg from "/city_updatedRoad.jpg";
 import femaleSprite from "/female.png";
 import maleSprite from "/male.png";
 import bearSprite from "/bear.png";
@@ -141,6 +141,18 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
   const [showTraitsPanel, setShowTraitsPanel] = useState(false);
   const [showWheelOnMobile, setShowWheelOnMobile] = useState(false);
   const [showStatsPanel, setShowStatsPanel] = useState(false);
+  const mapScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollMapRight = () => {
+    const el = mapScrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: el.clientWidth, behavior: "smooth" });
+  };
+  const scrollMapLeft = () => {
+    const el = mapScrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: -el.clientWidth, behavior: "smooth" });
+  };
 
   const markerSprite =
     profile?.gender === "女"
@@ -303,7 +315,7 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
         <div className="app-right map-panel">
           {mapError ? (
             <div className="map-placeholder">
-              <p>請將地圖圖片放在 <code>public/updated map.png</code></p>
+              <p>請將地圖圖片放在 <code>public/city_updatedRoad.jpg</code></p>
               <p className="muted">然後重新整理頁面。</p>
             </div>
           ) : (
@@ -318,16 +330,53 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
         </div>
       </div>
 
-      {/* Mobile: title + button + map always shown; wheel only while spinning, then question shows */}
+      {/* Mobile: full-screen map, wheel + ? icons fixed, horizontal scroll with arrow */}
       <div className="app-mobile">
-        <header className="mobile-header">
-          <h1 className="mobile-title">人生旅程：數位人生</h1>
-          {profile?.name && <p className="mobile-subtitle muted">{profile.name}</p>}
-        </header>
-        <div className="mobile-top-bar">
+        {/* Full-screen map: scroll left/right; first load shows left, arrow to right */}
+        <div
+          ref={mapScrollRef}
+          className="mobile-map-fullscreen"
+          role="region"
+          aria-label="地圖"
+        >
+          <div className="mobile-map-scroll-inner">
+            {mapError ? (
+              <div className="map-placeholder map-placeholder-mobile map-placeholder-fullscreen">
+                <p>請將地圖圖片放在 <code>public/city_updatedRoad.jpg</code></p>
+              </div>
+            ) : (
+              <MapWithMarkers
+                src={mapImg}
+                alt="人生旅程地圖"
+                progressIndex={pathIndex}
+                markerSprite={markerSprite}
+                onError={() => setMapError(true)}
+              />
+            )}
+          </div>
           <button
             type="button"
-            className="btn btn-primary btn-spin-main"
+            className="mobile-map-arrow mobile-map-arrow-right"
+            onClick={scrollMapRight}
+            aria-label="往右查看地圖"
+          >
+            →
+          </button>
+          <button
+            type="button"
+            className="mobile-map-arrow mobile-map-arrow-left"
+            onClick={scrollMapLeft}
+            aria-label="往左查看地圖"
+          >
+            ←
+          </button>
+        </div>
+
+        {/* Fixed row: wheel icon + question mark (always visible) */}
+        <div className="mobile-fixed-icons">
+          <button
+            type="button"
+            className="mobile-icon-btn mobile-wheel-icon"
             onClick={() => {
               if (!showWheelOnMobile) setShowWheelOnMobile(true);
               setTimeout(
@@ -335,75 +384,76 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
                 showWheelOnMobile ? 0 : 250
               );
             }}
+            aria-label="轉動人生輪盤"
           >
-            轉動人生輪盤
+            <span className="mobile-wheel-icon-svg" aria-hidden>🎡</span>
           </button>
-          {report && (
-            <button type="button" className="btn btn-primary btn-report-cta" onClick={() => setShowReport(true)}>
-              查看人生反思報告
-            </button>
-          )}
-        </div>
-        {showWheelOnMobile && (
-          <div className="mobile-wheel-section">
-            <div className="wheel-wrap wheel-wrap-mobile">
-              <LifeWheel
-                segments={uiManager.buildLifeWheel()}
-                onSpin={onSpin}
-                onSpinComplete={() => {
-                  onSpinComplete();
-                  setShowWheelOnMobile(false);
-                }}
-                lastRoll={lastRoll}
-              />
-            </div>
-          </div>
-        )}
-        <div className="mobile-map-section">
-          {mapError ? (
-            <div className="map-placeholder map-placeholder-mobile">
-              <p>請將地圖圖片放在 <code>public/updated map.png</code></p>
-              <p className="muted">然後重新整理頁面。</p>
-            </div>
-          ) : (
-            <MapWithMarkers
-              src={mapImg}
-              alt="人生旅程地圖"
-              progressIndex={pathIndex}
-              markerSprite={markerSprite}
-              onError={() => setMapError(true)}
-            />
-          )}
-        </div>
-        <footer className="mobile-bottom-bar">
-          {floatingDeltas && (
-            <div className="floating-deltas" role="status" aria-live="polite">
-              {floatingDeltas.money !== undefined && floatingDeltas.money !== 0 && (
-                <span className="floating-delta floating-delta-money">
-                  {floatingDeltas.money > 0 ? "+" : ""}{floatingDeltas.money} 金錢
-                </span>
-              )}
-              {floatingDeltas.stress !== undefined && floatingDeltas.stress !== 0 && (
-                <span className="floating-delta floating-delta-stress">
-                  {floatingDeltas.stress > 0 ? "+" : ""}{floatingDeltas.stress} 壓力
-                </span>
-              )}
-              {floatingDeltas.happiness !== undefined && floatingDeltas.happiness !== 0 && (
-                <span className="floating-delta floating-delta-happiness">
-                  {floatingDeltas.happiness > 0 ? "+" : ""}{floatingDeltas.happiness} 幸福感
-                </span>
-              )}
-            </div>
-          )}
           <button
             type="button"
-            className="mobile-stats-btn"
+            className="mobile-icon-btn mobile-stats-btn"
             onClick={() => setShowStatsPanel(true)}
             aria-label="查看數值"
           >
             ?
           </button>
+          {report && (
+            <button
+              type="button"
+              className="mobile-icon-btn mobile-report-btn"
+              onClick={() => setShowReport(true)}
+              aria-label="人生反思報告"
+            >
+              報告
+            </button>
+          )}
+        </div>
+
+        {showWheelOnMobile && (
+          <div className="mobile-wheel-overlay" role="dialog" aria-modal="true">
+            <div className="mobile-wheel-section">
+              <div className="wheel-wrap wheel-wrap-mobile">
+                <LifeWheel
+                  segments={uiManager.buildLifeWheel()}
+                  onSpin={onSpin}
+                  onSpinComplete={() => {
+                    onSpinComplete();
+                    setShowWheelOnMobile(false);
+                  }}
+                  lastRoll={lastRoll}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Bottom blue bar: title + welcome line (follow current design) */}
+        <footer className="mobile-bottom-topic">
+          <h2 className="mobile-bottom-topic-title">人生旅程：數位人生</h2>
+          <p className="mobile-bottom-topic-subtitle">
+            {profile?.name ? `${profile.name} · ` : ""}
+            歡迎進入【未來軌跡】—— 走下去，才知道終點在哪裡。
+          </p>
         </footer>
+
+        {floatingDeltas && (
+          <div className="floating-deltas floating-deltas-mobile" role="status" aria-live="polite">
+            {floatingDeltas.money !== undefined && floatingDeltas.money !== 0 && (
+              <span className="floating-delta floating-delta-money">
+                {floatingDeltas.money > 0 ? "+" : ""}{floatingDeltas.money} 金錢
+              </span>
+            )}
+            {floatingDeltas.stress !== undefined && floatingDeltas.stress !== 0 && (
+              <span className="floating-delta floating-delta-stress">
+                {floatingDeltas.stress > 0 ? "+" : ""}{floatingDeltas.stress} 壓力
+              </span>
+            )}
+            {floatingDeltas.happiness !== undefined && floatingDeltas.happiness !== 0 && (
+              <span className="floating-delta floating-delta-happiness">
+                {floatingDeltas.happiness > 0 ? "+" : ""}{floatingDeltas.happiness} 幸福感
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {showStatsPanel && (

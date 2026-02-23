@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import type {
   IntroProfile,
   IntroStats,
@@ -10,6 +10,40 @@ import type {
 } from "../../engine/types";
 
 const INITIAL_STATS: IntroStats = { Ambition: 0, Creativity: 0, Stability: 0 };
+
+/** Score intro answers into Ambition / Creativity / Stability for 測驗結果 */
+function computeStatsFromAnswers(
+  beliefFate: BeliefFate | null,
+  whatMattersMost: WhatMattersMost | null,
+  superpower: SuperpowerChoice | null,
+  coreGoal: CoreGoalId | null
+): IntroStats {
+  const s: IntroStats = { Ambition: 0, Creativity: 0, Stability: 0 };
+  const add = (key: IntroStatKey, n: number) => {
+    s[key] += n;
+  };
+  if (beliefFate) {
+    if (beliefFate === "yes") add("Ambition", 2);
+    else if (beliefFate === "no") add("Stability", 2);
+    else add("Creativity", 1);
+  }
+  if (whatMattersMost) {
+    if (whatMattersMost === "career") add("Ambition", 2);
+    else if (whatMattersMost === "freedom") add("Creativity", 2);
+    else if (whatMattersMost === "love" || whatMattersMost === "family") add("Stability", 2);
+  }
+  if (superpower) {
+    if (superpower === "time_travel") add("Creativity", 2);
+    else if (superpower === "healing") add("Stability", 2);
+    else if (superpower === "invisibility") add("Creativity", 1);
+    else if (superpower === "mind_reading") add("Stability", 1);
+  }
+  if (coreGoal) {
+    if (coreGoal === "money" || coreGoal === "fame") add("Ambition", 2);
+    else if (coreGoal === "peace") add("Stability", 2);
+  }
+  return s;
+}
 
 const CORE_GOALS: { id: CoreGoalId; label: string }[] = [
   { id: "money", label: "金錢" },
@@ -64,7 +98,11 @@ export function IntroModule({ onComplete }: { onComplete: (profile: IntroProfile
   const [whatMattersMost, setWhatMattersMost] = useState<WhatMattersMost | null>(null);
   const [superpower, setSuperpower] = useState<SuperpowerChoice | null>(null);
   const [coreGoal, setCoreGoal] = useState<CoreGoalId | null>(null);
-  const [stats, setStats] = useState<IntroStats>({ ...INITIAL_STATS });
+
+  const stats = useMemo(
+    () => computeStatsFromAnswers(beliefFate, whatMattersMost, superpower, coreGoal),
+    [beliefFate, whatMattersMost, superpower, coreGoal]
+  );
 
   const goToNextStep = () => {
     setStep((s) => Math.min(s + 1, 5));
@@ -103,6 +141,9 @@ export function IntroModule({ onComplete }: { onComplete: (profile: IntroProfile
       <div className="intro-card">
         {step === 0 && (
           <div className="intro-step">
+            <p className="intro-safari-tip">
+              建議使用 Safari 開啟；可「加入主畫面」以像 App 般開啟。
+            </p>
             <h2>基本資料</h2>
             <label>
               你的名字

@@ -59,78 +59,177 @@ html, body {
   display: none;
 }
 
-/* Mobile layout (<768px): flex column, wheel top → map middle (scroll) → histogram fixed bottom */
+/* Mobile layout: full-screen map, fixed wheel + ? icons */
 .app-mobile {
-  display: flex;
-  flex-direction: column;
+  position: relative;
   height: 100vh;
   min-height: 100vh;
   min-width: 0;
   overflow: hidden;
-  overflow-x: hidden;
 }
 
-/* Phone: title always shown at top */
-.mobile-header {
-  flex-shrink: 0;
-  padding: 12px 16px 8px;
-  background: rgba(255, 255, 255, 0.6);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  z-index: 8;
+/* Full-screen map: occupies entire viewport, scroll left/right */
+.mobile-map-fullscreen {
+  position: fixed;
+  inset: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  z-index: 1;
 }
-.mobile-title {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-  line-height: 1.3;
+.mobile-map-scroll-inner {
+  width: 200vw;
+  min-height: 100%;
+  display: block;
 }
-.mobile-subtitle {
-  margin: 4px 0 0;
-  font-size: 0.875rem;
+.mobile-map-fullscreen .map-image-wrapper {
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  display: block;
+}
+.mobile-map-fullscreen .map-image {
+  width: 100%;
+  height: auto;
+  min-height: 100vh;
+  object-fit: cover;
+  object-position: top left;
+  border-radius: 0;
+}
+.mobile-map-fullscreen .map-overlay {
+  position: absolute;
+  inset: 0;
 }
 
-.mobile-top-bar {
-  flex-shrink: 0;
+/* Arrows: direct user to left/right part of map */
+.mobile-map-arrow {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 1.5rem;
+  cursor: pointer;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: rgba(255, 255, 255, 0.6);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  z-index: 8;
+  justify-content: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+.mobile-map-arrow-right {
+  right: 12px;
+}
+.mobile-map-arrow-left {
+  left: 12px;
 }
 
-/* Wheel section: shown only after user taps spin */
+/* Fixed icon row: wheel + ? (and report) — same row, always visible */
+.mobile-fixed-icons {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 10;
+}
+.mobile-icon-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: rgba(255, 255, 255, 0.95);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+.mobile-wheel-icon-svg {
+  font-size: 1.5rem;
+}
+.mobile-report-btn {
+  font-size: 0.85rem;
+}
+
+/* Wheel overlay: shown when user taps wheel icon */
+.mobile-wheel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
 .mobile-wheel-section {
-  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  padding: 12px 16px;
+}
+.mobile-wheel-section .wheel-wrap-mobile {
+  position: relative;
   z-index: 5;
+  flex-shrink: 0;
+  width: 75vw;
+  max-width: 300px;
+  margin: 0 auto;
 }
 
-/* Map: full-page scrollable area */
-.mobile-map-section {
-  flex: 1 1 0;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 8px 16px;
-  padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
-  -webkit-overflow-scrolling: touch;
+/* Map placeholder when fullscreen */
+.map-placeholder-fullscreen {
+  min-height: 100vh;
+  width: 100vw;
+  border-radius: 0;
 }
 
-.mobile-map-section .snake-path-board {
-  max-width: 100%;
+/* Floating deltas on mobile (above fixed icons or bottom) */
+.floating-deltas-mobile {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 8;
 }
 
-.mobile-map-section .map-image-wrapper,
-.mobile-map-section .map-image {
-  max-width: 100%;
-  border-radius: 12px;
+/* Bottom topic bar: 人生旅程 + welcome line (milder blue, taller, slightly raised) */
+.mobile-bottom-topic {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 6;
+  background: #c8e0f2;
+  min-height: 92px;
+  border-radius: 0;
+  padding: 18px 18px;
+  padding-bottom: max(18px, env(safe-area-inset-bottom));
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.mobile-bottom-topic-title {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.35;
+}
+.mobile-bottom-topic-subtitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: rgba(15, 23, 42, 0.88);
+  line-height: 1.45;
 }
 
 .map-placeholder-mobile {
@@ -1390,6 +1489,13 @@ html, body {
 .intro-step h2 {
   margin: 0 0 16px;
   font-size: 18px;
+}
+
+.intro-safari-tip {
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: rgba(31, 31, 42, 0.65);
+  line-height: 1.4;
 }
 
 .intro-q {

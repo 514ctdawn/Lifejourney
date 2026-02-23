@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>iPhone Demo — 人生旅程</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .demo-label {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.8);
+      font-size: 14px;
+      z-index: 10;
+    }
+    /* iPhone 14 Pro-ish frame: 393×852 logical, with notch */
+    .iphone-frame {
+      width: 280px;
+      height: 600px;
+      background: #1c1c1e;
+      border-radius: 44px;
+      padding: 12px;
+      box-shadow:
+        0 0 0 3px #2c2c2e,
+        0 0 0 6px #1c1c1e,
+        0 24px 48px rgba(0,0,0,0.5),
+        inset 0 0 0 2px rgba(255,255,255,0.05);
+      position: relative;
+    }
+    .iphone-screen {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      border-radius: 34px;
+      overflow: hidden;
+      position: relative;
+    }
+    .iphone-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 28px;
+      background: #000;
+      border-radius: 0 0 20px 20px;
+      z-index: 2;
+    }
+    .iphone-iframe-wrap {
+      position: absolute;
+      inset: 0;
+      border-radius: 34px;
+      overflow: hidden;
+    }
+    .iphone-iframe-wrap iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 393px;
+      height: 852px;
+      border: none;
+      transform: scale(0.68);
+      transform-origin: top left;
+    }
+    /* Scale so 393px width fits in ~256px (280 - 24 padding) */
+    .iphone-iframe-wrap {
+      width: 256px;
+      height: 556px;
+      left: 12px;
+      top: 12px;
+      margin: 0 auto;
+    }
+    .iphone-iframe-wrap iframe {
+      width: 393px;
+      height: 852px;
+      transform: scale(0.652);
+      transform-origin: top left;
+    }
+  </style>
+</head>
+<body>
+  <p class="demo-label">iPhone 示範 — 請先執行 npm run dev，再打開此頁</p>
+  <div class="iphone-frame">
+    <div class="iphone-screen">
+      <div class="iphone-notch"></div>
+      <div class="iphone-iframe-wrap">
+        <iframe
+          id="app-frame"
+          src="/"
+          title="人生旅程 App"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+  <script>
+    // When opened from file or different port, try current origin
+    var frame = document.getElementById('app-frame');
+    if (window.location.port === '5173' || window.location.hostname === 'localhost') {
+      frame.src = '/';
+    } else {
+      frame.src = window.location.origin + window.location.pathname.replace(/iphone-demo\.html$/, '') || '/';
+    }
+  </script>
+</body>
+</html>
