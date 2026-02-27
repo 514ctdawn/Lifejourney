@@ -2,18 +2,17 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 
 type Point = { x: number; y: number };
 
-// Path as percentage (0–100): start (green flag) mid-left, end (red flag) upper-right
+// Fixed black-line "Z" path (percent positions in map space).
 const PATH: Point[] = [
-  { x: 50, y: 20 }, // index 0 → GREEN FLAG
-  { x: 60, y: 45 },
-  { x: 67, y: 40 },
-  { x: 74, y: 34 },
-  { x: 78, y: 30 },
-  { x: 75, y: 82 }, // last index → RED FLAG
+  { x: 55, y: 15 },
+  { x: 10, y: 55 },
+  { x: 58, y: 88 },
+  { x: 58, y: 95 },
 ];
 
 // Max progress index (0 = start, 50 = end). Game uses 50 turns → progress 0..50.
 export const MAX_PROGRESS_INDEX = 50;
+const MOVE_SPEED = 0.08; // Lower = slower/smoother (% map units per frame)
 
 function nearestPointOnPath(path: Point[], p: Point): Point {
   let best: Point = path[0];
@@ -43,6 +42,40 @@ function projectSegment(a: Point, b: Point, p: Point): number {
 const START = PATH[0];
 const END = PATH[PATH.length - 1];
 
+function pointAtProgress(path: Point[], t: number): Point {
+  if (path.length === 0) return { x: 0, y: 0 };
+  if (path.length === 1) return path[0];
+  const clampedT = Math.max(0, Math.min(1, t));
+
+  const segmentLengths: number[] = [];
+  let totalLength = 0;
+  for (let i = 0; i < path.length - 1; i++) {
+    const dx = path[i + 1].x - path[i].x;
+    const dy = path[i + 1].y - path[i].y;
+    const len = Math.hypot(dx, dy);
+    segmentLengths.push(len);
+    totalLength += len;
+  }
+  if (totalLength <= 1e-6) return path[path.length - 1];
+
+  let remainingDistance = clampedT * totalLength;
+  let i = 0;
+  while (i < segmentLengths.length - 1 && remainingDistance > segmentLengths[i]) {
+    remainingDistance -= segmentLengths[i];
+    i += 1;
+  }
+
+  const a = path[i];
+  const b = path[i + 1] ?? a;
+  const segmentLength = segmentLengths[i] || 1;
+  const segT = Math.max(0, Math.min(1, remainingDistance / segmentLength));
+
+  return {
+    x: a.x + (b.x - a.x) * segT,
+    y: a.y + (b.y - a.y) * segT,
+  };
+}
+
 function FlagIcon({ type }: { type: "start" | "end" }) {
   const color = type === "start" ? "#22c55e" : "#ef4444";
   return (
@@ -69,29 +102,53 @@ export function MapWithMarkers({
   markerSprite?: string;
 }) {
   const [dotPosition, setDotPosition] = useState<Point>(START);
+  const [targetPosition, setTargetPosition] = useState<Point>(START);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const dotRef = useRef<HTMLDivElement | HTMLImageElement | null>(null);
+  const dotPositionRef = useRef<Point>(START);
 
-  // Map progressIndex 0..MAX_PROGRESS_INDEX to position along PATH (interpolate between 6 points).
+  // Map progressIndex 0..MAX_PROGRESS_INDEX to position along fixed black-line PATH.
   useEffect(() => {
     if (typeof progressIndex !== "number") return;
     const t = Math.max(0, Math.min(1, progressIndex / MAX_PROGRESS_INDEX));
-    const seg = t * (PATH.length - 1);
-    const i = Math.floor(seg);
-    const j = Math.min(i + 1, PATH.length - 1);
-    const f = seg - i;
-    const target: Point = {
-      x: PATH[i].x + f * (PATH[j].x - PATH[i].x),
-      y: PATH[i].y + f * (PATH[j].y - PATH[i].y),
-    };
-    setDotPosition(target);
+    setTargetPosition(pointAtProgress(PATH, t));
     const timer = setTimeout(() => {
       dotRef.current?.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
     }, 520);
     return () => clearTimeout(timer);
   }, [progressIndex]);
+
+  // Animate marker toward target using map-percentage units, independent of screen size.
+  useEffect(() => {
+    if (isDragging) return;
+    let raf = 0;
+    const step = () => {
+      const prev = dotPositionRef.current;
+      const dx = targetPosition.x - prev.x;
+      const dy = targetPosition.y - prev.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist < MOVE_SPEED) {
+        dotPositionRef.current = targetPosition;
+        setDotPosition(targetPosition);
+        return;
+      }
+
+      const ratio = MOVE_SPEED / dist;
+      const next: Point = {
+        x: prev.x + dx * ratio,
+        y: prev.y + dy * ratio,
+      };
+      dotPositionRef.current = next;
+      setDotPosition(next);
+      raf = window.requestAnimationFrame(step);
+    };
+
+    raf = window.requestAnimationFrame(step);
+    return () => window.cancelAnimationFrame(raf);
+  }, [targetPosition, isDragging]);
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
@@ -109,6 +166,7 @@ export function MapWithMarkers({
       const x = ((e.clientX - rect.left) / rect.width) * 100;
       const y = ((e.clientY - rect.top) / rect.height) * 100;
       const snapped = nearestPointOnPath(PATH, { x, y });
+      dotPositionRef.current = snapped;
       setDotPosition(snapped);
     },
     [isDragging]
@@ -139,7 +197,7 @@ export function MapWithMarkers({
           <div
             ref={dotRef as React.MutableRefObject<HTMLDivElement | null>}
             className={`map-dot-sprite-wrap ${isDragging ? "map-dot-dragging" : ""}`}
-            style={{ left: `${dotPosition.x}%`, top: `${dotPosition.y}%` }}
+            style={{ left: `${dotPosition.x}%`, top: `${dotPosition.y}%`, transform: "translate(-50%, -100%)" }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}

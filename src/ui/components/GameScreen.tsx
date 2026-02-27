@@ -161,7 +161,7 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
         ? maleSprite
         : profile?.gender
           ? bearSprite
-          : undefined;
+          : maleSprite;
 
   const ensureEngine = () => {
     if (!engineRef.current) {

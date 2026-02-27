@@ -1201,27 +1201,20 @@ html, body {
 
 .map-dot-sprite-wrap {
   position: absolute;
-  width: 40px;
-  height: 40px;
-  z-index: 3;
-  transition: left 0.5s ease-in-out, top 0.5s ease-in-out;
-  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  z-index: 99;
+  transition: none;
+  transform: translate(-50%, -100%);
+  overflow: visible;
 }
 
 .map-dot-sprite {
   width: 100%;
-  height: 100%;
+  height: auto;
   object-fit: contain;
   display: block;
-}
-
-.map-dot-sprite {
-  position: absolute;
-  width: 200px;
-  height: 200px;
-  object-fit: contain;
-  z-index: 3;
-  transition: left 0.5s ease-in-out, top 0.5s ease-in-out;
+  filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.3));
 }
 
 .map-flag-wrap {
