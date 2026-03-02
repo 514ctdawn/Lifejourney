@@ -2,12 +2,14 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 
 type Point = { x: number; y: number };
 
-// Fixed black-line "Z" path (percent positions in map space).
+// Waypoints traced from the black guideline on map_blackline.png.
 const PATH: Point[] = [
-  { x: 55, y: 15 },
-  { x: 10, y: 55 },
-  { x: 58, y: 88 },
-  { x: 58, y: 95 },
+  { x: 54, y: 14 },
+  { x: 67, y: 24 },
+  { x: 29, y: 44 },
+  { x: 6, y: 58 },
+  { x: 34, y: 76 },
+  { x: 67, y: 92 },
 ];
 
 // Max progress index (0 = start, 50 = end). Game uses 50 turns → progress 0..50.

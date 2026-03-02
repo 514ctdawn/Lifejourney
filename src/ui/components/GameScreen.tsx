@@ -15,7 +15,7 @@ import { LifeWheel } from "./LifeWheel";
 import { MapWithMarkers, MAX_PROGRESS_INDEX } from "./MapWithMarkers";
 import { ScenarioCard } from "./ScenarioCard";
 import { ReflectionReport } from "./ReflectionReport";
-import mapImg from "/city_updatedRoad.jpg";
+import mapImg from "/map_blackline.png";
 import femaleSprite from "/female.png";
 import maleSprite from "/male.png";
 import bearSprite from "/bear.png";
@@ -315,7 +315,7 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
         <div className="app-right map-panel">
           {mapError ? (
             <div className="map-placeholder">
-              <p>請將地圖圖片放在 <code>public/city_updatedRoad.jpg</code></p>
+              <p>請將地圖圖片放在 <code>public/map_blackline.png</code></p>
               <p className="muted">然後重新整理頁面。</p>
             </div>
           ) : (
@@ -342,7 +342,7 @@ export function GameScreen({ profile }: { profile?: IntroProfile | null }) {
           <div className="mobile-map-scroll-inner">
             {mapError ? (
               <div className="map-placeholder map-placeholder-mobile map-placeholder-fullscreen">
-                <p>請將地圖圖片放在 <code>public/city_updatedRoad.jpg</code></p>
+                <p>請將地圖圖片放在 <code>public/map_blackline.png</code></p>
               </div>
             ) : (
               <MapWithMarkers
