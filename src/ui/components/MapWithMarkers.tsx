@@ -179,6 +179,8 @@ export function MapWithMarkers({
     (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
   }, []);
 
+  const reachedEnd = typeof progressIndex === "number" && progressIndex >= MAX_PROGRESS_INDEX;
+
   return (
     <div className="map-image-wrapper" ref={containerRef}>
       <img
@@ -198,7 +200,7 @@ export function MapWithMarkers({
         {markerSprite ? (
           <div
             ref={dotRef as React.MutableRefObject<HTMLDivElement | null>}
-            className={`map-dot-sprite-wrap ${isDragging ? "map-dot-dragging" : ""}`}
+            className={`map-dot-sprite-wrap ${isDragging ? "map-dot-dragging" : ""} ${reachedEnd ? "map-dot-at-end" : ""}`}
             style={{ left: `${dotPosition.x}%`, top: `${dotPosition.y}%`, transform: "translate(-50%, -100%)" }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
@@ -210,7 +212,7 @@ export function MapWithMarkers({
         ) : (
           <div
             ref={dotRef as React.MutableRefObject<HTMLDivElement | null>}
-            className={`map-dot ${isDragging ? "map-dot-dragging" : ""}`}
+            className={`map-dot ${isDragging ? "map-dot-dragging" : ""} ${reachedEnd ? "map-dot-at-end" : ""}`}
             style={{ left: `${dotPosition.x}%`, top: `${dotPosition.y}%`, transform: "translate(-50%, -50%)" }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
